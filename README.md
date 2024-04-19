@@ -60,7 +60,7 @@ We welcome contributions and discussions.
 
 For more detailed rules and examples, you can visit https://abstractmeanderings.wordpress.com/2014/10/06/jump-sturdy/ or https://www.mindsports.nl/index.php/the-pit/576-jumpsturdy
 
-## Game tree exploration
+## Game Tree Exploration
 
 ## Game Representation
 
