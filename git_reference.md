@@ -1,4 +1,4 @@
-## Importatnt Git commands:
+## Important Git commands:
 
 ### git clone [url]:
 - **Function**: This command downloads a complete copy of an existing Git repository from a remote location (usually a URL like GitHub) to your local machine.
