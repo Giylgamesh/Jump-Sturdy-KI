@@ -1,3 +1,5 @@
+# Analyzing the Complexity of Jump Sturdy
+
 ## Understanding Game Complexity
 
 It is important to know how deep the rabbit hole goes before jumping in. For it there are several factors we need to consider:
