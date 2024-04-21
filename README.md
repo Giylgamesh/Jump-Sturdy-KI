@@ -15,6 +15,10 @@ We welcome contributions and discussions.
     <td><strong>Efficient State Representation</strong></td>
     <td>Allows the AI agent to quickly identify potential next moves and distinguish between different game states.</td>
   </tr>
+   <tr>
+    <td><strong>Informed Positional Evaluation</strong></td>
+    <td>Allows the AI agent to gain knowledge based on the  strategic value of different positions.</td>
+  </tr>
   <tr>
     <td><strong>Heuristic-Based Decision Making</strong></td>
     <td>The AI agent utilizes a set of rules (heuristics) to prioritize promising moves based on the current game state.</td>
