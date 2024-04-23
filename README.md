@@ -44,6 +44,10 @@ We welcome contributions and discussions.
     <td>- The top piece of a double stack can move or capture as a chess knight, but only forward.</td>
   </tr>
   <tr>
+    <td><strong>Blocked Piece</strong></td>
+    <td>- The bottom piece of a double stack can't move or capture</td>
+  </tr>
+  <tr>
     <td><strong>Starting Setup</strong></td>
     <td>- Each player starts with 12 pieces: 6 in their home row and 6 in the second row without the corners.</td>
   </tr>
