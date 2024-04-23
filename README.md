@@ -33,7 +33,7 @@ We welcome contributions and discussions.
   </tr>
   <tr>
     <td><strong>Board and Pieces</strong></td>
-    <td>- 8x8 board with corners removed. <br> - Two players: white and black. <br> - Pieces are single or double stacks.</td>
+    <td>- 8x8 board with corners removed. <br> - Two players: white and black. <br> - Pieces are single or top or bottom piece of double stacks.</td>
   </tr>
   <tr>
     <td><strong>Single Stacks</strong></td>
