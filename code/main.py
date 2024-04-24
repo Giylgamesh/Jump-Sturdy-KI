@@ -1,54 +1,70 @@
 import random
+from Jump_Sturdy_Board_Class import JumpSturdyBoard
+from Jump_Sturdy_Player_Agent_Class import JumpSturdyPlayerAgent
 
-class JumpSturdyAI:
-    def __init__(self, color):
-        self.color = color
-
-    def make_move(self, board):
-        # Generate all possible moves
-        possible_moves = self.generate_moves(board)
-
-        # Randomly select a move
-        move = random.choice(possible_moves)
-
-        # Make the move
-        board.make_move(move)
-
-    def generate_moves(self, board):
-        # Implemen move generation logic here
-        pass
-
-class JumpSturdyBoard:
-    def __init__(self):
-        # Initialize the board
-        self.board = [[' ' for _ in range(8)] for _ in range(8)]
-
-    def make_move(self, move):
-        # Implement logic to make a move on the board
-        pass
-
-    def is_game_over(self):
-        # Implement the logic to check if the game is over
-        pass
-
-    def print_board(self):
-        # Implement logic to print the board
-        pass
-
-# Create the Jump Sturdy board
+    
+# erzeugen ein Objekt der Klasse JumpSturdyBoard
+# wir erzeugen also ein 8x8 Spielbrett
 board = JumpSturdyBoard()
+# setzen steine auf das Brett
+board.put_pieces_on_board()
+# initialisieren turn_counter um züge zu zählen. Könnte relevant sein für Zeitmanagement
+board_turn_count = 0
+# stelle board dar
+board.print_board()
+#print(board.board)
 
-# Create the AI players
-white_ai = JumpSturdyAI('white')
-black_ai = JumpSturdyAI('black')
+# erzeugen zwei objektre der Klasse JumpSturdyPlayerAgent
+# ein Spieler spielt mit den weißen Steinen, der andere mit den schwarzen
+white_player = JumpSturdyPlayerAgent('white')
+black_player = JumpSturdyPlayerAgent('black')
 
-# Play the game
-while not board.is_game_over():
-    white_ai.make_move(board)
-    board.print_board()
+# beginne jeden Zug in dem wir checken ob das Spiel vorbei ist
+# wenn spiel noch nicht vorbei ist, macht ein Spieler-Agent einen Zug
 
-    if board.is_game_over():
-        break
+#-----------------------------------------------------------------------
+# die for-schleife soll beim testen helfen
+for i in range(5): 
+    #solange spiel nicht vorbei ist, wird weitergespielt
+    # game_end_check() gibt True == 1 zurück, wenn das Spiel vorbei ist, sonst 0 
+    while board.game_end_check() == False:
+        # zähle züge und schreibe sie in die konsole 
+        board_turn_count += 1
+        print("Turn: ", board_turn_count, ", White players turn")
+        # spieler mit weißen steinen beginnt
+        white_player.pick_move(board)
+        
+        board.print_board()
 
-    black_ai.make_move(board)
-    board.print_board()
+        # wenn spiel vorbei ist, dann beende das spiel. 
+        if board.game_end_check():
+            print("game is over")
+            break
+    
+        # analog zu oben
+        board_turn_count += 1
+        print("Turn: ", board_turn_count, ", Black players turn")    
+        black_player.pick_move(board)
+        
+        board.print_board()
+
+        if board.game_end_check():
+            print("game is over")
+            break
+    
+    
+ #---------------------------------------------------------------------------------
+    
+# while board.game_end_check() == False:
+#     white_player.mpick_move(board)
+    
+#     board.print_board()
+
+#     # wenn spiel vorbei ist, dann beende das spiel
+#     if board.game_end_check():
+#         print("you probably won or lost or it's a draw or something. Congrats!")
+#         break
+
+#     black_player.pick_move(board)
+    
+#     board.print_board()
