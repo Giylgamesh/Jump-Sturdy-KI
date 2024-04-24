@@ -1,4 +1,7 @@
 ## Alpha-Beta Pruning
+We can combine this with value iteration i.e. we use heuristics for deciding in which order to explore the tree until reaching an horizont and value iteration to backtrack the value of all the nodes that lead to that horizon.
+I dont understand it so well yet but its an idea. maybe this can be memory expensive. 
+hmm, thinking of it this is kind of the same as alpha beta prunning.
 
 ## State Representation
 
