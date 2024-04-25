@@ -20,6 +20,10 @@ class JumpSturdyBoard:
         # nimmt die move variable aus der pick_move Methode und macht den Zug der JumpSturdyPlayerAgent Klasse und 
         # aktualisiert das Board
         pass
+    
+    def move_history(self,move):
+        history = []
+        move.history.append(history)
 
     def game_end_check(self):
         
