@@ -35,6 +35,7 @@ for i in range(5):
         white_player.pick_move(board)
         
         board.print_board()
+        print("this is the move history: ", board.move_history)
 
         # wenn spiel vorbei ist, dann beende das spiel. 
         if board.game_end_check():
