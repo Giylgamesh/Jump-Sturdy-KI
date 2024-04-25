@@ -17,6 +17,9 @@ class JumpSturdyBoard:
         # setze die Steine auf das Board
         # in dem fall 12 weiße und 12 schwarze Steine
         # viellecht sollten wir das auch in der __init__ Methode machen
+        # hier soll der code mit bitboards sein. 
+        # vielleicht kann man move_piece und put_pieces lieber als 
+        # als nur eine methode schreiebn und nicht als zwei
         pass
 
     def move_piece(self, move):
@@ -33,5 +36,6 @@ class JumpSturdyBoard:
 
     def print_board(self):
         # Stelle das Board "grafisch" dar....irgendwie
+        
         print(self.board)
         
