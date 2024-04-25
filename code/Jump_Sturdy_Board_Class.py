@@ -4,6 +4,7 @@ class JumpSturdyBoard:
         # in dem fall noch ein 8x8 board
         #self.board = [0, 0, 0, 0, 0, 0, 0, 0]
         self.board = [[0 for i in range(8)] for j in range(8)]
+        self.move_history = ["123"]
         
     def turn_counter(self):
         # zähle die Anzahl an Zügen
@@ -17,13 +18,9 @@ class JumpSturdyBoard:
         pass
 
     def move_piece(self, move):
-        # nimmt die move variable aus der pick_move Methode und macht den Zug der JumpSturdyPlayerAgent Klasse und 
+        # nimmt die move variable aus der pick_move Methode aus der Jump_Sturdy_Player_Agent Klasse und macht den Zug der JumpSturdyPlayerAgent Klasse und 
         # aktualisiert das Board
         pass
-    
-    def move_history(self,move):
-        history = []
-        move.history.append(history)
 
     def game_end_check(self):
         
