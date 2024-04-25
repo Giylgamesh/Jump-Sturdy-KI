@@ -4,7 +4,9 @@ class JumpSturdyBoard:
         # in dem fall noch ein 8x8 board
         #self.board = [0, 0, 0, 0, 0, 0, 0, 0]
         self.board = [[0 for i in range(8)] for j in range(8)]
-        self.move_history = ["123"]
+        self.move_history = ["123"] #ich teste hier gerade wie ich eine 
+        # move-History einfüge. eigtl müsste es so klappen aber mein
+    #gehirn lagged gerade 
         
     def turn_counter(self):
         # zähle die Anzahl an Zügen
