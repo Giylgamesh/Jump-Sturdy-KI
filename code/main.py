@@ -53,7 +53,10 @@ for i in range(5):
             print("game is over")
             break
     
-    
+  """ich weiß noch nicht wie ich weiß und schwarz immer im wechsel 
+  spielen lasse, sodass diese schleife nur halb so groß ist. also dass die schleife 
+  am anfang immmer entscheidet wer jetzt dran ist, und nicht beide spieler
+  in dieser einen schleife dran kommen"""  
  #---------------------------------------------------------------------------------
     
 # while board.game_end_check() == False:
