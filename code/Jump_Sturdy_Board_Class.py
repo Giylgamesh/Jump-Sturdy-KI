@@ -1,25 +1,21 @@
 class JumpSturdyBoard:
-    #Array mit allen Bit Boards der Figuren aus Jump-Sturdy bestehen
-    pieceBB = [0b0, 0b0, 0b0, 0b0, 0b0, 0b0]
-    #Repräsentation von leeren Feldern in einem BB
-    emptyBB=0b0
-    #Repräsentation von besetzten Feldern in einem BB
-    occupiedBB=0b0
-    
     def __init__(self):
         # initialisiere leeres board
-        # in dem fall noch ein 8x8 board
-        #self.board = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.board = [[0 for i in range(8)] for j in range(8)]
-        self.move_history = ["123"] #ich teste hier gerade wie ich eine 
-        # move-History einfüge. eigtl müsste es so klappen aber mein
-    #gehirn lagged gerade 
+        # leere BitBoards die zum Board gehören
+        #Array mit allen Bit Boards der Figuren aus Jump-Sturdy bestehen
+        self.pieceBB = [0b0, 0b0, 0b0, 0b0, 0b0, 0b0]
+        #Repräsentation von leeren Feldern in einem BB
+        self.emptyBB = 0b0
+        #Repräsentation von besetzten Feldern in einem BB
+        self.occupiedBB = 0b0
+        # move-History einfüge
+        self.move_history = ["123"] 
         
     def turn_counter(self):
         # zähle die Anzahl an Zügen
         self.turn_counter += 1
 
-    def fen_notation_into_bb(notation):
+    def fen_notation_into_bb(self, notation):
         #Auslesen der vorgegebenen String Notation vom Server in unsere BitBoards für Pieces
         binary = ""
         boardPos = 59
@@ -35,14 +31,14 @@ class JumpSturdyBoard:
                 #Schaue, ob das nächste Zeichen aus der Notation ebenfalls ein "r" ist, denn daraus Ergibt sich ein Pferd.
                 if notation[i] == notation[i + 1]:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Pferde. 
-                    JumpSturdyBoard.pieceBB[2]+=int(binary,2)
+                    self.pieceBB[2]+=int(binary,2)
                 #Schaue, ob das nächste Zeichen aus der Notation ein "b" ist, denn daraus Ergibt sich ein captured red pawn(Mir fällt der deutsche Name nicht ein).
                 elif notation[i+1] == "b":
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured red pawn.
-                    JumpSturdyBoard.pieceBB[4] += int(binary, 2)
+                    self.pieceBB[4] += int(binary, 2)
                 else:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Bauern.
-                    JumpSturdyBoard.pieceBB[0] += int(binary, 2)
+                    self.pieceBB[0] += int(binary, 2)
             #Falls das Zeichen ein "/" soll dieser Schleifendurchlauf überprüfen werden, da es kein Zeichen ist, welches im Board notwendig ist.
             elif notation[i] == "/":
                 i += 1
@@ -51,13 +47,13 @@ class JumpSturdyBoard:
             elif notation[i] == "b":
                 if notation[i] == notation[i + 1]:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Pferde. 
-                    JumpSturdyBoard.pieceBB[3] += int(binary, 2)
+                    self.pieceBB[3] += int(binary, 2)
                 elif notation[i+1] == "r":
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured blue pawn.
-                    JumpSturdyBoard.pieceBB[5] += int(binary, 2)
+                    self.pieceBB[5] += int(binary, 2)
                 else:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Bauern.
-                    JumpSturdyBoard.pieceBB[1] += int(binary, 2)
+                    self.pieceBB[1] += int(binary, 2)
             #Falls das Zeichen aus der Notation eine Zahl ist.
             else:
                 #Reduziere die Board Position um die angegebene Zahl für die leeren Felder. 
@@ -83,14 +79,30 @@ class JumpSturdyBoard:
         pass
 
     def game_end_check(self):
-        
         # checke ob Spiel vorbei ist
         # also ob alle gegnerischen Steine geschlagen wurden, oder ob keine Züge mehr möglich sind, oder ob ein Stein die andere Seite erreicht hat
         # return 1, wenn spiel vorbei ist, sonst return 0
         pass
 
     def print_board(self):
-        # Stelle das Board "grafisch" dar....irgendwie
-        
-        print(self.board)
+        #Printe das Board der Übersicht halber
+        for i in range(59, -1, -1):
+            #Shifte dabei immer die jeweiligen BitBoards um i stellen und schaue ob dieses Zeichen eine 1 ist.
+            #Falls ja Printe den Buchstaben des jeweiligen Pieces vom BitBoard
+            if (self.pieceBB[0]>>i)&1==1:
+                print("r", end='')
+            elif (self.pieceBB[1]>>i)&1==1:
+                print("b", end='')
+            elif (self.pieceBB[2]>>i)&1==1:
+                print("R", end='')
+            elif (self.pieceBB[3]>>i)&1==1:
+                print("B", end='')
+            elif (self.pieceBB[4]>>i)&1==1:
+                print("c", end='')
+            elif (self.pieceBB[5]>>i)&1==1:
+                print("C", end='')
+            else:
+                print("0", end='')
+            if i%8==6:
+                print()
         
