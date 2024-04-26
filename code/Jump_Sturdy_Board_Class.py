@@ -35,14 +35,14 @@ class JumpSturdyBoard:
                 #Schaue, ob das nächste Zeichen aus der Notation ebenfalls ein "r" ist, denn daraus Ergibt sich ein Pferd.
                 if notation[i] == notation[i + 1]:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Pferde. 
-                    PBoard.pieceBB[2]+=int(binary,2)
+                    JumpSturdyBoard.pieceBB[2]+=int(binary,2)
                 #Schaue, ob das nächste Zeichen aus der Notation ein "b" ist, denn daraus Ergibt sich ein captured red pawn(Mir fällt der deutsche Name nicht ein).
                 elif notation[i+1] == "b":
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured red pawn.
-                    PBoard.pieceBB[4] += int(binary, 2)
+                    JumpSturdyBoard.pieceBB[4] += int(binary, 2)
                 else:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Bauern.
-                    PBoard.pieceBB[0] += int(binary, 2)
+                    JumpSturdyBoard.pieceBB[0] += int(binary, 2)
             #Falls das Zeichen ein "/" soll dieser Schleifendurchlauf überprüfen werden, da es kein Zeichen ist, welches im Board notwendig ist.
             elif notation[i] == "/":
                 i += 1
@@ -51,13 +51,13 @@ class JumpSturdyBoard:
             elif notation[i] == "b":
                 if notation[i] == notation[i + 1]:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Pferde. 
-                    PBoard.pieceBB[3] += int(binary, 2)
+                    JumpSturdyBoard.pieceBB[3] += int(binary, 2)
                 elif notation[i+1] == "r":
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured blue pawn.
-                    PBoard.pieceBB[5] += int(binary, 2)
+                    JumpSturdyBoard.pieceBB[5] += int(binary, 2)
                 else:
                     #Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Bauern.
-                    PBoard.pieceBB[1] += int(binary, 2)
+                    JumpSturdyBoard.pieceBB[1] += int(binary, 2)
             #Falls das Zeichen aus der Notation eine Zahl ist.
             else:
                 #Reduziere die Board Position um die angegebene Zahl für die leeren Felder. 
