@@ -858,7 +858,7 @@ class Board:
     def print_legal_moves(self, selected_legal_moves):
         for move_category in selected_legal_moves:
             print(move_category + ":   " + format(selected_legal_moves[move_category], '64b'))
-        print('----------------------------------------------------------------')
+        print('------------------------------------------------------------------------------------------')
 
 
 class Move:
