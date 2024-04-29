@@ -692,93 +692,40 @@ class Board:
     def get_all_legal_moves(self):
         return self.get_legal_moves(self.move_categories_dict)
 
-    def get_enemies_legal_moves(self, categories):
+    def get_enemies_legal_moves(self, selected_categories):
         # Get a dic of legal moves depending on the requested category
         legal_moves = {}
 
-        for category in categories:
-            # Singles to the front
-            if category == "singles_front_empty":
-                legal_moves[category] = self.RED_SINGLES << 8 & ~self.RED_SINGLES & ~self.BLUE_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_front_singles":
-                legal_moves[category] = self.RED_SINGLES << 8 & self.RED_SINGLES
+        for category in selected_categories:
+            if category.startswith("singles"):
+                if "front" in category:
+                    to_coordinates = self.shift_pieces(self.RED_SINGLES, -self.shift_map[category])
+                else:
+                    to_coordinates = self.shift_pieces(self.RED_SINGLES, self.shift_map[category])
+            elif category.startswith("doubles"):
+                to_coordinates = self.shift_pieces(self.RED_DOUBLES, self.shift_map[category])
+            else:
+                return "Error: Unknown category"
 
-            # Singles to the left
-            elif category == "singles_left_empty":
-                legal_moves[category] = self.RED_SINGLES << 1 & ~self.RED_SINGLES & ~self.BLUE_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_left_singles":
-                legal_moves[category] = self.RED_SINGLES << 1 & self.RED_SINGLES
+            if "kill" in category:
+                if category.endswith("singles"):
+                    to_coordinates &= self.BLUE_SINGLES
+                elif category.endswith("doubles"):
+                    to_coordinates &= self.BLUE_DOUBLES
+            elif "upgrade" in category:
+                to_coordinates &= self.RED_SINGLES
+            else:
+                if category.endswith("empty"):
+                    to_coordinates &= ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
+                elif category.endswith("singles"):
+                    to_coordinates &= self.RED_SINGLES
+                elif category.endswith("doubles"):
+                    to_coordinates &= self.RED_DOUBLES
 
-            # Singles to the right
-            elif category == "singles_right_empty":
-                legal_moves[category] = self.RED_SINGLES >> 1 & ~self.RED_SINGLES & ~self.BLUE_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_right_singles":
-                legal_moves[category] = self.RED_SINGLES >> 1 & self.RED_SINGLES
-
-            # Singles kill left
-            elif category == "singles_kill_left_single":
-                legal_moves[category] = self.RED_SINGLES << 9 & self.BLUE_SINGLES
-            elif category == "singles_kill_left_double":
-                legal_moves[category] = self.RED_SINGLES << 9 & self.BLUE_DOUBLES
-
-            # Singles kill right
-            elif category == "singles_kill_right_single":
-                legal_moves[category] = self.RED_SINGLES << 7 & self.BLUE_SINGLES
-            elif category == "singles_kill_right_double":
-                legal_moves[category] = self.RED_SINGLES << 7 & self.BLUE_DOUBLES
-
-            # Singles upgrade left
-            elif category == "singles_upgrade_left":
-                legal_moves[category] = self.RED_SINGLES << 1 & self.RED_SINGLES
-
-            # Singles upgrade right
-            elif category == "singles_upgrade_right":
-                legal_moves[category] = self.RED_SINGLES >> 1 & self.RED_SINGLES
-
-            # singles upgrade front
-            elif category == "singles_upgrade_front":
-                legal_moves[category] = self.RED_SINGLES >> 8 & self.RED_SINGLES
-
-            # Doubles to left-left-front
-            elif category == "doubles_l_l_f_empty":
-                legal_moves[category] = self.RED_DOUBLES << 10 & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_l_l_f_single":
-                legal_moves[category] = self.RED_DOUBLES << 10 & self.RED_SINGLES
-            elif category == "doubles_l_l_f_kill_single":
-                legal_moves[category] = self.RED_DOUBLES << 10 & self.BLUE_SINGLES
-            elif category == "doubles_l_l_f_kill_double":
-                legal_moves[category] = self.RED_DOUBLES << 10 & self.BLUE_DOUBLES
-
-            # Doubles to front-front-left
-            elif category == "doubles_f_f_l_empty":
-                legal_moves[category] = self.RED_DOUBLES << 17 & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_f_f_l_single":
-                legal_moves[category] = self.RED_DOUBLES << 17 & self.RED_SINGLES
-            elif category == "doubles_f_f_l_kill_single":
-                legal_moves[category] = self.RED_DOUBLES << 17 & self.BLUE_SINGLES
-            elif category == "doubles_f_f_l_kill_double":
-                legal_moves[category] = self.RED_DOUBLES << 17 & self.BLUE_DOUBLES
-
-            # Doubles to front-front-right
-            elif category == "doubles_f_f_r_empty":
-                legal_moves[category] = self.RED_DOUBLES << 15 & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_f_f_r_single":
-                legal_moves[category] = self.RED_DOUBLES << 15 & self.RED_SINGLES
-            elif category == "doubles_f_f_r_kill_single":
-                legal_moves[category] = self.RED_DOUBLES << 15 & self.BLUE_SINGLES
-            elif category == "doubles_f_f_r_kill_double":
-                legal_moves[category] = self.RED_DOUBLES << 15 & self.BLUE_DOUBLES
-
-            # Doubles to right-right-front
-            elif category == "doubles_r_r_f_empty":
-                legal_moves[category] = self.RED_DOUBLES << 6 & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_r_r_f_single":
-                legal_moves[category] = self.RED_DOUBLES << 6 & self.RED_SINGLES
-            elif category == "doubles_r_r_f_kill_single":
-                legal_moves[category] = self.RED_DOUBLES << 6 & self.BLUE_SINGLES
-            elif category == "doubles_r_r_f_kill_double":
-                legal_moves[category] = self.RED_DOUBLES << 6 & self.BLUE_DOUBLES
-
+            if "front" in category:
+                legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, self.shift_map[category])
+            else:
+                legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, - self.shift_map[category])
 
         return legal_moves
 
