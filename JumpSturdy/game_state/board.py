@@ -103,6 +103,10 @@ class Board:
     FIRST_6_SQUARES_MASK = 0b000111111
     LAST_6_SQUARES_MASK = 0b111111 << (64 - 6)
     FORBIDDEN_SQUARES_MASK = 9295429630892703873
+    FORBIDDEN_LEFT_MASK = 0b0000000100000001000000010000000100000001000000010000000100000001
+    FORBIDDEN_RIGHT_MASK = 0b1000000010000000100000001000000010000000100000001000000010000000
+    FORBIDDEN_LEFT_LEFT_MASK = 0b0000001100000011000000110000001100000011000000110000001100000011
+    FORBIDDEN_RIGHT_RIGHT_MASK = 0b1100000011000000110000001100000011000000110000001100000011000000
 
     move_categories_dict = {
         # singles
@@ -304,6 +308,10 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
+                        if move.to.value == move.from_.value - 1 and move.to.value in [16,24,32,40,48,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 1 and move.to.value in [9,17,25,33,41,49]:
+                            return "Error: Invalid move"
                         self.last_state = self.capture_state()
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.from_)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
@@ -410,6 +418,15 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
+                        if move.to.value == move.from_.value + 6 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 10 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 15 and move.to.value in [16,24,32,40,48,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 17 and move.to.value in [9,17,25,33,41,49,]:
+                            return "Error: Invalid move"
+
                         self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
@@ -471,6 +488,11 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
+                        if move.to.value == move.from_.value - 1 and move.to.value in [16,24,32,40,48,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 1 and move.to.value in [9,17,25,33,41,49]:
+                            return "Error: Invalid move"
+
                         self.last_state = self.capture_state()
                         self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.from_)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
@@ -574,6 +596,15 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
+                        if move.to.value == move.from_.value + 6 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 10 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 15 and move.to.value in [16,24,32,40,48,56]:
+                            return "Error: Invalid move"
+                        elif move.to.value == move.from_.value + 17 and move.to.value in [9,17,25,33,41,49,]:
+                            return "Error: Invalid move"
+
                         self.last_state = self.capture_state()
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
@@ -662,34 +693,44 @@ class Board:
         return moves
 
     # Information Retrieval Methods
-    def get_legal_moves(self, selected_categories):
-        # Get a dic of legal moves depending on the requested category
+    def get_legal_moves(self, selected_categories, player_color):
+        # Get a dict of legal moves depending on the requested category and player color
         legal_moves = {}
+        friend_singles = self.BLUE_SINGLES if player_color == "Blue" else self.RED_SINGLES
+        friend_doubles = self.BLUE_DOUBLES if player_color == "Blue" else self.RED_DOUBLES
+        enemy_singles = self.RED_SINGLES if player_color == "Blue" else self.BLUE_SINGLES
+        enemy_doubles = self.RED_DOUBLES if player_color == "Blue" else self.BLUE_DOUBLES
 
         for category in selected_categories:
-            if category.startswith("singles"):
-                to_coordinates = shift_pieces(self.BLUE_SINGLES, self.shift_map[category])
-            elif category.startswith("doubles"):
-                to_coordinates = shift_pieces(self.BLUE_DOUBLES, self.shift_map[category])
-            else:
-                return "Error: Unknown category"
+            direction_multiplier = -1 if player_color == "Red" and "front" in category else 1
+
+            to_coordinates = shift_pieces(friend_singles if category.startswith("singles") else friend_doubles,
+                                          direction_multiplier * self.shift_map[category])
+
+            # Apply masks and filters based on the category specifics
+            if "left" in category or "f_f_l" in category:
+                to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
+            elif "right" in category or "f_f_r" in category:
+                to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
+            elif "l_l_f" in category:
+                to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
+            elif "r_r_f" in category:
+                to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
 
             if "kill" in category:
-                if category.endswith("singles"):
-                    to_coordinates &= self.RED_SINGLES
-                elif category.endswith("doubles"):
-                    to_coordinates &= self.RED_DOUBLES
+                to_coordinates &= enemy_singles if category.endswith("singles") else enemy_doubles
             elif "upgrade" in category:
-                to_coordinates &= self.BLUE_SINGLES
+                to_coordinates &= friend_singles
             else:
                 if category.endswith("empty"):
-                    to_coordinates &= ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
+                    to_coordinates &= ~(friend_singles | enemy_singles | friend_doubles | enemy_doubles | self.FORBIDDEN_SQUARES_MASK)
                 elif category.endswith("singles"):
-                    to_coordinates &= self.BLUE_SINGLES
+                    to_coordinates &= friend_singles
                 elif category.endswith("doubles"):
-                    to_coordinates &= self.BLUE_DOUBLES
+                    to_coordinates &= friend_doubles
 
-            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, - self.shift_map[category])
+            shift_direction = self.shift_map[category] if "front" in category and player_color == "Red" else -self.shift_map[category]
+            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, shift_direction)
 
         return legal_moves
 
@@ -710,6 +751,15 @@ class Board:
                 to_coordinates = shift_pieces(self.RED_DOUBLES, self.shift_map[category])
             else:
                 return "Error: Unknown category"
+
+            if "left" in category or "f_f_l" in category:
+                to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
+            elif "right" in category or "f_f_r" in category:
+                to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
+            elif "l_l_f" in category:
+                to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
+            elif "r_r_f" in category:
+                to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
 
             if "kill" in category:
                 if category.endswith("singles"):
@@ -952,10 +1002,8 @@ def main():
             # parse move_categories
             selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
             # get legal moves
-            if turn == 'Blue':
-                selected_legal_moves = board.get_legal_moves(selected_categories)
-            else:
-                selected_legal_moves = board.get_enemies_legal_moves(selected_categories)
+            selected_legal_moves = board.get_legal_moves(selected_categories, turn)
+
             # print legal moves
             board.print_legal_moves(selected_legal_moves)
             continue
