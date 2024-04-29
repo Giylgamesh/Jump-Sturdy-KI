@@ -1,5 +1,5 @@
 # Jump-Sturdy: Building an AI agent to play Jump Sturdy.
-University Symbolic AI Project
+Symbolic AI Project
 
 This repository houses the code for a symbolic AI project developed by three Bachelor students at Technische Universität Berlin for the "Symbolische Künstliche Intelligenz" project. 
 
