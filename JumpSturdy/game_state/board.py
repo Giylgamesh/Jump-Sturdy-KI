@@ -1,5 +1,6 @@
 from enum import Enum
 import os
+from random import choice
 
 def there_is(bitboard, n):
     """Check if the nth bit of the bitboard is set (1)."""
@@ -797,6 +798,14 @@ class Board:
             print(f"{move_category}: {', '.join(moves)}")
         print('------------------------------------------------------------------------------------------')
 
+    def get_random_move(self):
+        # Get a random move from the selected legal moves
+        return choice(self.get_all_legal_moves())
+
+    def select_random_move(self, selected_legal_moves):
+        # Get a random move from the selected legal moves
+        return choice(selected_legal_moves)
+
 
 class Move:
     def __init__(self, player, fromm, to):
@@ -909,6 +918,7 @@ def main():
         print("- 'quit'")
         print("- 'back'")
         print("- 'get'")
+        print("- 'random'")
         next_move = input("Enter next move:")
         if next_move.lower() == 'quit':
             break
@@ -921,8 +931,6 @@ def main():
                 turn = players[i % 2]
             continue
         elif next_move.lower() == 'get':
-
-
             print()
             print('- alle')
             print('- number')
@@ -945,6 +953,38 @@ def main():
                 selected_legal_moves = board.get_enemies_legal_moves(selected_categories)
             # print legal moves
             board.print_legal_moves(selected_legal_moves)
+            continue
+        elif next_move.lower() == 'random':
+            print("- alle")
+            print("- number")
+
+            move_categories = "help"
+            while move_categories.lower() == 'help':
+                move_categories = input('Enter move category: ')
+
+                if move_categories.lower() == 'help':
+                    print('Dictionary of legal moves:')
+                    print(board.move_categories_dict)
+
+            # parse move_categories
+            selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
+            # get legal moves
+            if turn == 'Blue':
+                selected_legal_moves = board.get_legal_moves(selected_categories)
+            else:
+                selected_legal_moves = board.get_enemies_legal_moves(selected_categories)
+
+
+            random_move = board.select_random_move(selected_legal_moves)
+
+            # Create and apply the move
+            move = Move(player=turn, fromm=random_move.from_, to=random_move.to)
+            response = board.apply_move(move)
+            print("-----------------------")
+            print(response)
+            print("-----------------------")
+
+
             continue
         else:
             # Convert input to Coordinates
