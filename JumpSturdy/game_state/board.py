@@ -24,6 +24,14 @@ def clear_nth_bit(bitboard, n):
     mask = all_ones ^ nth_bit_set
     result1 = bitboard & mask
     return result1
+def get_deepest_keys(d, container):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            get_deepest_keys(v, container)
+        else:
+            container[v] = True
+
+    return container
 
 def parse_move_categories(input_str, move_categories_dict):
     selected_move_categories = {}
@@ -75,19 +83,20 @@ def parse_move_categories(input_str, move_categories_dict):
         # If we end up with a dictionary, get all the end values
         if isinstance(current_dict, dict):
             # Use a recursive helper function to get all the end values
-            def get_deepest_keys(d, container):
-                for k, v in d.items():
-                    if isinstance(v, dict):
-                        get_deepest_keys(v, container)
-                    else:
-                        container[v] = True
-
-            get_deepest_keys(current_dict, selected_move_categories)
+            selected_move_categories = get_deepest_keys(current_dict, selected_move_categories)
         elif isinstance(current_dict, str):
             # If we end up with a string, it's an end value
             selected_move_categories[current_dict] = True
 
     return selected_move_categories
+
+
+def shift_pieces(bitboard, shift):
+    if shift > 0:
+        return bitboard >> shift
+    else:
+        return bitboard << -shift
+
 
 class Board:
     # Class-level constants for masks
@@ -652,12 +661,6 @@ class Board:
                 moves.append(f"{Coordinate(from_position + 1).name}-{Coordinate(to_position + 1).name}")
         return moves
 
-    def shift_pieces(self, bitboard, shift):
-        if shift > 0:
-            return bitboard >> shift
-        else:
-            return bitboard << -shift
-
     # Information Retrieval Methods
     def get_legal_moves(self, selected_categories):
         # Get a dic of legal moves depending on the requested category
@@ -665,9 +668,9 @@ class Board:
 
         for category in selected_categories:
             if category.startswith("singles"):
-                to_coordinates = self.shift_pieces(self.BLUE_SINGLES, self.shift_map[category])
+                to_coordinates = shift_pieces(self.BLUE_SINGLES, self.shift_map[category])
             elif category.startswith("doubles"):
-                to_coordinates = self.shift_pieces(self.BLUE_DOUBLES, self.shift_map[category])
+                to_coordinates = shift_pieces(self.BLUE_DOUBLES, self.shift_map[category])
             else:
                 return "Error: Unknown category"
 
@@ -700,11 +703,11 @@ class Board:
         for category in selected_categories:
             if category.startswith("singles"):
                 if "front" in category:
-                    to_coordinates = self.shift_pieces(self.RED_SINGLES, -self.shift_map[category])
+                    to_coordinates = shift_pieces(self.RED_SINGLES, -self.shift_map[category])
                 else:
-                    to_coordinates = self.shift_pieces(self.RED_SINGLES, self.shift_map[category])
+                    to_coordinates = shift_pieces(self.RED_SINGLES, self.shift_map[category])
             elif category.startswith("doubles"):
-                to_coordinates = self.shift_pieces(self.RED_DOUBLES, self.shift_map[category])
+                to_coordinates = shift_pieces(self.RED_DOUBLES, self.shift_map[category])
             else:
                 return "Error: Unknown category"
 
@@ -804,6 +807,8 @@ class Board:
 
     def select_random_move(self, selected_legal_moves):
         # Get a random move from the selected legal moves
+        random_moves = []
+        get_deepest_keys(random_moves, selected_legal_moves)
         return choice(selected_legal_moves)
 
 
