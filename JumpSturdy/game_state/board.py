@@ -33,10 +33,10 @@ def parse_move_categories(input_str, move_categories_dict):
         selected_move_categories = {'singles_left_empty': True,
                                     'singles_front_empty': True,
                                     'singles_right_empty': True,
-                                    'singles_kill_left_single': True,
-                                    'singles_kill_left_double': True,
-                                    'singles_kill_right_single': True,
-                                    'singles_kill_right_double': True,
+                                    'singles_kill_left_singles': True,
+                                    'singles_kill_left_doubles': True,
+                                    'singles_kill_right_singles': True,
+                                    'singles_kill_right_doubles': True,
                                     'singles_upgrade_left': True,
                                     'singles_upgrade_front': True,
                                     'singles_upgrade_right': True,
@@ -44,14 +44,14 @@ def parse_move_categories(input_str, move_categories_dict):
                                     'doubles_f_f_l_empty': True,
                                     'doubles_f_f_r_empty': True,
                                     'doubles_r_r_f_empty': True,
-                                    'doubles_kill_l_l_f_single': True,
-                                    'doubles_kill_l_l_f_double': True,
-                                    'doubles_kill_f_f_l_single': True,
-                                    'doubles_kill_f_f_l_double': True,
-                                    'doubles_kill_f_f_r_single': True,
-                                    'doubles_kill_f_f_r_double': True,
-                                    'doubles_kill_r_r_f_single': True,
-                                    'doubles_kill_r_r_f_double': True
+                                    'doubles_kill_l_l_f_singles': True,
+                                    'doubles_kill_l_l_f_doubles': True,
+                                    'doubles_kill_f_f_l_singles': True,
+                                    'doubles_kill_f_f_l_doubles': True,
+                                    'doubles_kill_f_f_r_singles': True,
+                                    'doubles_kill_f_f_r_doubles': True,
+                                    'doubles_kill_r_r_f_singles': True,
+                                    'doubles_kill_r_r_f_doubles': True
                                     }
         return selected_move_categories
 
@@ -648,7 +648,7 @@ class Board:
         for to_position in range(64):
             if to_coordinates & (9223372036854775808 >> to_position):
                 from_position = to_position + shift
-                moves.append(f"{from_position + 1}-{to_position + 1}")
+                moves.append(f"{Coordinate(from_position + 1).name}-{Coordinate(to_position + 1).name}")
         return moves
 
     def shift_pieces(self, bitboard, shift):
@@ -980,10 +980,15 @@ def main():
             print('- alle')
             print('- number')
             print('- help')
-            move_categories = input('Enter move category:')
-            if move_categories.lower() == 'help':
-                print('Dictionary of legal moves:')
-                print(board.move_categories_dict)
+
+            move_categories = "help"
+            while move_categories.lower() == 'help':
+                move_categories = input('Enter move category: ')
+
+                if move_categories.lower() == 'help':
+                    print('Dictionary of legal moves:')
+                    print(board.move_categories_dict)
+
             # parse move_categories
             selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
             # get legal moves
