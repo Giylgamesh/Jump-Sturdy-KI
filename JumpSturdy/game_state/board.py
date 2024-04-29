@@ -107,13 +107,13 @@ class Board:
             '2': {
                 # left
                 '1': {
-                    '1': 'singles_kill_left_single',
-                    '2': 'singles_kill_left_double'
+                    '1': 'singles_kill_left_singles',
+                    '2': 'singles_kill_left_doubles'
                 },
                 # right
                 '2': {
-                    '1': 'singles_kill_right_single',
-                    '2': 'singles_kill_right_double',
+                    '1': 'singles_kill_right_singles',
+                    '2': 'singles_kill_right_doubles',
                 }
             },
             # upgrade
@@ -136,33 +136,65 @@ class Board:
             '2': {
                 # l_l_f
                 '1': {
-                    '1': 'doubles_kill_l_l_f_single',
-                    '2': 'doubles_kill_l_l_f_double'
+                    '1': 'doubles_kill_l_l_f_singles',
+                    '2': 'doubles_kill_l_l_f_doubles'
                 },
                 # f_f_l
                 '2': {
-                    '1': 'doubles_kill_f_f_l_single',
-                    '2': 'doubles_kill_f_f_l_double',
+                    '1': 'doubles_kill_f_f_l_singles',
+                    '2': 'doubles_kill_f_f_l_doubles',
                 },
                 # f_f_r
                 '3': {
-                    '1': 'doubles_kill_f_f_r_single',
-                    '2': 'doubles_kill_f_f_r_double',
+                    '1': 'doubles_kill_f_f_r_singles',
+                    '2': 'doubles_kill_f_f_r_doubles',
                 },
                 # r_r_f
                 '4': {
-                    '1': 'doubles_kill_r_r_f_single',
-                    '2': 'doubles_kill_r_r_f_double',
+                    '1': 'doubles_kill_r_r_f_singles',
+                    '2': 'doubles_kill_r_r_f_doubles',
                 }
             },
             # change double
             '3': {
-                '1': 'doubles_l_l_f_single',
-                '2': 'doubles_f_f_l_single',
-                '3': 'doubles_f_f_r_single',
-                '4': 'doubles_r_r_f_single',
+                '1': 'doubles_l_l_f_singles',
+                '2': 'doubles_f_f_l_singles',
+                '3': 'doubles_f_f_r_singles',
+                '4': 'doubles_r_r_f_singles',
             }
         }
+    }
+
+    shift_map = {
+        "singles_front_empty": 8,
+        "singles_left_empty": -1,
+        "singles_right_empty": 1,
+        "singles_front_singles": 8,
+        "singles_left_singles": -1,
+        "singles_right_singles": 1,
+        "singles_kill_left_singles": 7,
+        "singles_kill_right_singles": 9,
+        "singles_kill_left_doubles": 7,
+        "singles_kill_right_doubles": 9,
+        "singles_upgrade_left": -1,
+        "singles_upgrade_right": 1,
+        "singles_upgrade_front": 8,
+        "doubles_l_l_f_empty": 6,
+        "doubles_f_f_l_empty": 15,
+        "doubles_f_f_r_empty": 17,
+        "doubles_r_r_f_empty": 10,
+        "doubles_l_l_f_singles": 6,
+        "doubles_f_f_l_singles": 15,
+        "doubles_f_f_r_singles": 17,
+        "doubles_r_r_f_singles": 10,
+        "doubles_kill_l_l_f_singles": 6,
+        "doubles_kill_f_f_l_singles": 15,
+        "doubles_kill_f_f_r_singles": 17,
+        "doubles_kill_r_r_f_singles": 10,
+        "doubles_kill_l_l_f_doubles": 6,
+        "doubles_kill_f_f_l_doubles": 15,
+        "doubles_kill_f_f_r_doubles": 17,
+        "doubles_kill_r_r_f_doubles": 10,
     }
 
     def __init__(self):
@@ -489,10 +521,10 @@ class Board:
                     # there is red single
                     elif there_is(self.RED_SINGLES, move.to):
                             self.last_state = self.capture_state()
-                            self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
-                            self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
-                            self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
-                            self.BLUE_BLOCKED = add_nth_bit(self.BLUE_BLOCKED, move.to)
+                            self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
+                            self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
+                            self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
+                            self.RED_BLOCKED = add_nth_bit(self.RED_BLOCKED, move.to)
                             # on top of blue blocked
                             if there_is(self.BLUE_BLOCKED, move.from_):
                                 self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
@@ -610,93 +642,50 @@ class Board:
         # No end-game conditions met
         return "Game not over"
 
+    def parse_to_coordinate_to_move(self, to_coordinates, shift):
+        # This function should return the "from-to" string based on the to_position and the shift
+        moves = []
+        for to_position in range(64):
+            if to_coordinates & (9223372036854775808 >> to_position):
+                from_position = to_position + shift
+                moves.append(f"{from_position + 1}-{to_position + 1}")
+        return moves
+
+    def shift_pieces(self, bitboard, shift):
+        if shift > 0:
+            return bitboard >> shift
+        else:
+            return bitboard << -shift
+
     # Information Retrieval Methods
     def get_legal_moves(self, selected_categories):
         # Get a dic of legal moves depending on the requested category
         legal_moves = {}
 
         for category in selected_categories:
-            # Singles to the front
-            if category == "singles_front_empty":
-                legal_moves[category] = self.BLUE_SINGLES >> 8 & ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_front_singles":
-                legal_moves[category] = self.BLUE_SINGLES >> 8 & self.BLUE_SINGLES
+            if category.startswith("singles"):
+                to_coordinates = self.shift_pieces(self.BLUE_SINGLES, self.shift_map[category])
+            elif category.startswith("doubles"):
+                to_coordinates = self.shift_pieces(self.BLUE_DOUBLES, self.shift_map[category])
+            else:
+                return "Error: Unknown category"
 
-            # Singles to the left
-            elif category == "singles_left_empty":
-                legal_moves[category] = self.BLUE_SINGLES << 1 & ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_left_singles":
-                legal_moves[category] = self.BLUE_SINGLES << 1 & self.BLUE_SINGLES
+            if "kill" in category:
+                if category.endswith("singles"):
+                    to_coordinates &= self.RED_SINGLES
+                elif category.endswith("doubles"):
+                    to_coordinates &= self.RED_DOUBLES
+            elif "upgrade" in category:
+                to_coordinates &= self.BLUE_SINGLES
+            else:
+                if category.endswith("empty"):
+                    to_coordinates &= ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
+                elif category.endswith("singles"):
+                    to_coordinates &= self.BLUE_SINGLES
+                elif category.endswith("doubles"):
+                    to_coordinates &= self.BLUE_DOUBLES
 
-            # Singles to the right
-            elif category == "singles_right_empty":
-                legal_moves[category] = self.BLUE_SINGLES >> 1 & ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "singles_right_singles":
-                legal_moves[category] = self.BLUE_SINGLES >> 1 & self.BLUE_SINGLES
-
-            # Singles kill left
-            elif category == "singles_kill_left_single":
-                legal_moves[category] = self.BLUE_SINGLES >> 7 & self.RED_SINGLES
-            elif category == "singles_kill_left_double":
-                legal_moves[category] = self.BLUE_SINGLES >> 7 & self.RED_DOUBLES
-
-            # Singles kill right
-            elif category == "singles_kill_right_single":
-                legal_moves[category] = self.BLUE_SINGLES >> 9 & self.RED_SINGLES
-            elif category == "singles_kill_right_double":
-                legal_moves[category] = self.BLUE_SINGLES >> 9 & self.RED_DOUBLES
-
-            # Singles upgrade left
-            elif category == "singles_upgrade_left":
-                legal_moves[category] = self.BLUE_SINGLES << 1 & self.BLUE_SINGLES
-
-            # Singles upgrade right
-            elif category == "singles_upgrade_right":
-                legal_moves[category] = self.BLUE_SINGLES >> 1 & self.BLUE_SINGLES
-
-            # singles upgrade front
-            elif category == "singles_upgrade_front":
-                legal_moves[category] = self.BLUE_SINGLES >> 8 & self.BLUE_SINGLES
-
-            # Doubles to left-left-front
-            elif category == "doubles_l_l_f_empty":
-                legal_moves[category] = self.BLUE_DOUBLES >> 6 & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_l_l_f_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 6 & self.BLUE_SINGLES
-            elif category == "doubles_l_l_f_kill_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 6 & self.RED_SINGLES
-            elif category == "doubles_l_l_f_kill_double":
-                legal_moves[category] = self.BLUE_DOUBLES >> 6 & self.RED_DOUBLES
-
-            # Doubles to front-front-left
-            elif category == "doubles_f_f_l_empty":
-                legal_moves[category] = self.BLUE_DOUBLES >> 15 & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_f_f_l_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 15 & self.BLUE_SINGLES
-            elif category == "doubles_f_f_l_kill_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 15 & self.RED_SINGLES
-            elif category == "doubles_f_f_l_kill_double":
-                legal_moves[category] = self.BLUE_DOUBLES >> 15 & self.RED_DOUBLES
-
-            # Doubles to front-front-right
-            elif category == "doubles_f_f_r_empty":
-                legal_moves[category] = self.BLUE_DOUBLES >> 17 & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_f_f_r_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 17 & self.BLUE_SINGLES
-            elif category == "doubles_f_f_r_kill_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 17 & self.RED_SINGLES
-            elif category == "doubles_f_f_r_kill_double":
-                legal_moves[category] = self.BLUE_DOUBLES >> 17 & self.RED_DOUBLES
-
-            # Doubles to right-right-front
-            elif category == "doubles_r_r_f_empty":
-                legal_moves[category] = self.BLUE_DOUBLES >> 10 & ~self.BLUE_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_SINGLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-            elif category == "doubles_r_r_f_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 10 & self.BLUE_SINGLES
-            elif category == "doubles_r_r_f_kill_single":
-                legal_moves[category] = self.BLUE_DOUBLES >> 10 & self.RED_SINGLES
-            elif category == "doubles_r_r_f_kill_double":
-                legal_moves[category] = self.BLUE_DOUBLES >> 10 & self.RED_DOUBLES
+            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, - self.shift_map[category])
 
         return legal_moves
 
@@ -828,14 +817,14 @@ class Board:
                 elif (self.RED_BLOCKED >> i) & 1:
                     board_array[row][col] = 'Bd'
                 else:
-                    board_array[row][col] = "ERROR"
+                    board_array[row][col] = "bD-ERROR"
             elif (self.RED_DOUBLES >> i) & 1:
                 if (self.RED_BLOCKED >> i) & 1:
                     board_array[row][col] = 'BD'
                 elif (self.BLUE_BLOCKED >> i) & 1:
                     board_array[row][col] = 'bD'
                 else:
-                    board_array[row][col] = "ERROR"
+                    board_array[row][col] = "rD-ERROR"
             elif (self.BLUE_BLOCKED >> i) & 1:
                 board_array[row][col] = 'bB-ERROR'
             elif (self.RED_BLOCKED >> i) & 1:
@@ -847,6 +836,7 @@ class Board:
         # Print the current state of the board
         board_array = self.array_board()
 
+        print('------------------------------------------------------------------------------------------')
         print('   A B C D E F G H')
         for row in range(8, 0, -1):
             print(f'{row} ', end=' ')
@@ -856,8 +846,8 @@ class Board:
         print('   A B C D E F G H')
 
     def print_legal_moves(self, selected_legal_moves):
-        for move_category in selected_legal_moves:
-            print(move_category + ":   " + format(selected_legal_moves[move_category], '64b'))
+        for move_category, moves in selected_legal_moves.items():
+            print(f"{move_category}: {', '.join(moves)}")
         print('------------------------------------------------------------------------------------------')
 
 
@@ -966,6 +956,9 @@ def main():
         # Ask for the next move
         print("-----------------------")
         print(turn + "'s turn")
+        print("-----------------------")
+
+        print("ex: A1-B1")
         print("- 'quit'")
         print("- 'back'")
         print("- 'get'")
@@ -978,79 +971,19 @@ def main():
                 print("Already in first turn")
             else:
                 i -= 1
+                turn = players[i % 2]
             continue
         elif next_move.lower() == 'get':
-            print('Dictionary of legal moves:')
-            print("""
-{
-    # singles
-    '1': {
-        # move
-        '1': {
-            '1': 'singles_left_empty',
-            '2': 'singles_front_empty',
-            '3': 'singles_right_empty',
-        },
-        # kill
-        '2': {
-            # left
-            '1': {
-                '1': 'singles_kill_left_single',
-                '2': 'singles_kill_left_double'
-            },
-            # right
-            '2': {
-                '1': 'singles_kill_right_single',
-                '2': 'singles_kill_right_double',
-            }
-        },
-        # upgrade
-        '3': {
-            '1': 'singles_upgrade_left',
-            '2': 'singles_upgrade_front',
-            '3': 'singles_upgrade_right'
-        }
-    },
-    # doubles
-    '2': {
-        # move
-        '1': {
-            '1': 'doubles_l_l_f_empty',
-            '2': 'doubles_f_f_l_empty',
-            '3': 'doubles_f_f_r_empty',
-            '4': 'doubles_r_r_f_empty',
-        },
-        # kill
-        '2': {
-            # l_l_f
-            '1': {
-                '1': 'doubles_kill_l_l_f_single',
-                '2': 'doubles_kill_l_l_f_double'
-            },
-            # f_f_l
-            '2': {
-                '1': 'doubles_kill_f_f_l_single',
-                '2': 'doubles_kill_f_f_l_double',
-            },
-            # f_f_r
-            '3': {
-                '1': 'doubles_kill_f_f_r_single',
-                '2': 'doubles_kill_f_f_r_double',
-            },
-            # r_r_f
-            '4': {
-                '1': 'doubles_kill_r_r_f_single',
-                '2': 'doubles_kill_r_r_f_double',
-            }
-        }
-    }
-}
-                    """)
+
+
             print()
             print('- alle')
             print('- number')
+            print('- help')
             move_categories = input('Enter move category:')
-
+            if move_categories.lower() == 'help':
+                print('Dictionary of legal moves:')
+                print(board.move_categories_dict)
             # parse move_categories
             selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
             # get legal moves
@@ -1068,7 +1001,7 @@ def main():
                 from_coordinate = Coordinate[from_square]
                 to_coordinate = Coordinate[to_square]
             except ValueError:
-                print("Please enter moves in the format 'F3-F4'.")
+                print("Please enter moves in the format 'H8-H7'.")
                 continue
             except KeyError:
                 print("Invalid coordinates. Try again.")
@@ -1078,6 +1011,9 @@ def main():
         # Create and apply the move
         move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
         response = board.apply_move(move)
+        print("-----------------------")
+        print(response)
+        print("-----------------------")
 
         # Increment turn
         if response.startswith('Good:'):
