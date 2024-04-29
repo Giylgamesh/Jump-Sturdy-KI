@@ -23,27 +23,147 @@ def clear_nth_bit(bitboard, n):
     mask = all_ones ^ nth_bit_set
     result1 = bitboard & mask
     return result1
+
+def parse_move_categories(input_str, move_categories_dict):
+    selected_move_categories = {}
+
+    # If input contains "alle", add all moves
+    if "alle" in input_str:
+        # Flatten all the move category names into a list and add them to the dictionary
+        selected_move_categories = {'singles_left_empty': True,
+                                    'singles_front_empty': True,
+                                    'singles_right_empty': True,
+                                    'singles_kill_left_single': True,
+                                    'singles_kill_left_double': True,
+                                    'singles_kill_right_single': True,
+                                    'singles_kill_right_double': True,
+                                    'singles_upgrade_left': True,
+                                    'singles_upgrade_front': True,
+                                    'singles_upgrade_right': True,
+                                    'doubles_l_l_f_empty': True,
+                                    'doubles_f_f_l_empty': True,
+                                    'doubles_f_f_r_empty': True,
+                                    'doubles_r_r_f_empty': True,
+                                    'doubles_kill_l_l_f_single': True,
+                                    'doubles_kill_l_l_f_double': True,
+                                    'doubles_kill_f_f_l_single': True,
+                                    'doubles_kill_f_f_l_double': True,
+                                    'doubles_kill_f_f_r_single': True,
+                                    'doubles_kill_f_f_r_double': True,
+                                    'doubles_kill_r_r_f_single': True,
+                                    'doubles_kill_r_r_f_double': True
+                                    }
+        return selected_move_categories
+
+    # Split input_str by comma to process each part separately
+    categories = input_str.split(',')
+
+    for category in categories:
+        current_dict = move_categories_dict
+
+        # Follow the keys to get to the deepest value
+        for key in category:
+            try:
+                current_dict = current_dict[key]
+            except KeyError:
+                # If a key is not found, report it and skip this part
+                print(f"Invalid key '{key}' in path '{category}'.")
+                current_dict = {}
+                break
+
+        # If we end up with a dictionary, get all the end values
+        if isinstance(current_dict, dict):
+            # Use a recursive helper function to get all the end values
+            def get_deepest_keys(d, container):
+                for k, v in d.items():
+                    if isinstance(v, dict):
+                        get_deepest_keys(v, container)
+                    else:
+                        container[v] = True
+
+            get_deepest_keys(current_dict, selected_move_categories)
+        elif isinstance(current_dict, str):
+            # If we end up with a string, it's an end value
+            selected_move_categories[current_dict] = True
+
+    return selected_move_categories
+
 class Board:
     # Class-level constants for masks
     FIRST_6_SQUARES_MASK = 0b000111111
     LAST_6_SQUARES_MASK = 0b111111 << (64 - 6)
     FORBIDDEN_SQUARES_MASK = 9295429630892703873
 
-    all_legal_moves = [
-        "singles_front_empty", "singles_front_singles",
-        "singles_left_empty", "singles_left_singles",
-        "singles_right_empty", "singles_right_singles",
-        "singles_kill_left_single", "singles_kill_left_double",
-        "singles_kill_right_single", "singles_kill_right_double",
-        "doubles_l_l_f_empty", "doubles_l_l_f_single",
-        "doubles_l_l_f_kill_single", "doubles_l_l_f_kill_double",
-        "doubles_f_f_l_empty", "doubles_f_f_l_single",
-        "doubles_f_f_l_kill_single", "doubles_f_f_l_kill_double",
-        "doubles_f_f_r_empty", "doubles_f_f_r_single",
-        "doubles_f_f_r_kill_single", "doubles_f_f_r_kill_double",
-        "doubles_r_r_f_empty", "doubles_r_r_f_single",
-        "doubles_r_r_f_kill_single", "doubles_r_r_f_kill_double"
-    ]
+    move_categories_dict = {
+        # singles
+        '1': {
+            # move
+            '1': {
+                '1': 'singles_left_empty',
+                '2': 'singles_front_empty',
+                '3': 'singles_right_empty',
+            },
+            # kill
+            '2': {
+                # left
+                '1': {
+                    '1': 'singles_kill_left_single',
+                    '2': 'singles_kill_left_double'
+                },
+                # right
+                '2': {
+                    '1': 'singles_kill_right_single',
+                    '2': 'singles_kill_right_double',
+                }
+            },
+            # upgrade
+            '3': {
+                '1': 'singles_upgrade_left',
+                '2': 'singles_upgrade_front',
+                '3': 'singles_upgrade_right'
+            }
+        },
+        # doubles
+        '2': {
+            # move
+            '1': {
+                '1': 'doubles_l_l_f_empty',
+                '2': 'doubles_f_f_l_empty',
+                '3': 'doubles_f_f_r_empty',
+                '4': 'doubles_r_r_f_empty',
+            },
+            # kill
+            '2': {
+                # l_l_f
+                '1': {
+                    '1': 'doubles_kill_l_l_f_single',
+                    '2': 'doubles_kill_l_l_f_double'
+                },
+                # f_f_l
+                '2': {
+                    '1': 'doubles_kill_f_f_l_single',
+                    '2': 'doubles_kill_f_f_l_double',
+                },
+                # f_f_r
+                '3': {
+                    '1': 'doubles_kill_f_f_r_single',
+                    '2': 'doubles_kill_f_f_r_double',
+                },
+                # r_r_f
+                '4': {
+                    '1': 'doubles_kill_r_r_f_single',
+                    '2': 'doubles_kill_r_r_f_double',
+                }
+            },
+            # change double
+            '3': {
+                '1': 'doubles_l_l_f_single',
+                '2': 'doubles_f_f_l_single',
+                '3': 'doubles_f_f_r_single',
+                '4': 'doubles_r_r_f_single',
+            }
+        }
+    }
 
     def __init__(self):
         # Initialize the board state
@@ -472,7 +592,7 @@ class Board:
         return "Good: Move undone"
 
     # Game-state Checking Methods
-    def is_game_over(self, legal_moves):
+    def is_game_over(self):
         # Check for end-game
 
         # Check if BLUE or RED have reached the opposite side
@@ -487,19 +607,15 @@ class Board:
         elif self.RED_SINGLES == 0 and self.RED_DOUBLES == 0:
             return "Game over: Blue wins"
 
-        # Check if there are no legal moves
-        if not legal_moves:
-            return "Game over: Shouldn't reach here"
-
         # No end-game conditions met
         return "Game not over"
 
     # Information Retrieval Methods
-    def get_legal_moves(self, categories):
+    def get_legal_moves(self, selected_categories):
         # Get a dic of legal moves depending on the requested category
         legal_moves = {}
 
-        for category in categories:
+        for category in selected_categories:
             # Singles to the front
             if category == "singles_front_empty":
                 legal_moves[category] = self.BLUE_SINGLES >> 8 & ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
@@ -512,7 +628,7 @@ class Board:
             elif category == "singles_left_singles":
                 legal_moves[category] = self.BLUE_SINGLES << 1 & self.BLUE_SINGLES
 
-             # Singles to the right
+            # Singles to the right
             elif category == "singles_right_empty":
                 legal_moves[category] = self.BLUE_SINGLES >> 1 & ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
             elif category == "singles_right_singles":
@@ -529,6 +645,18 @@ class Board:
                 legal_moves[category] = self.BLUE_SINGLES >> 9 & self.RED_SINGLES
             elif category == "singles_kill_right_double":
                 legal_moves[category] = self.BLUE_SINGLES >> 9 & self.RED_DOUBLES
+
+            # Singles upgrade left
+            elif category == "singles_upgrade_left":
+                legal_moves[category] = self.BLUE_SINGLES << 1 & self.BLUE_SINGLES
+
+            # Singles upgrade right
+            elif category == "singles_upgrade_right":
+                legal_moves[category] = self.BLUE_SINGLES >> 1 & self.BLUE_SINGLES
+
+            # singles upgrade front
+            elif category == "singles_upgrade_front":
+                legal_moves[category] = self.BLUE_SINGLES >> 8 & self.BLUE_SINGLES
 
             # Doubles to left-left-front
             elif category == "doubles_l_l_f_empty":
@@ -573,7 +701,7 @@ class Board:
         return legal_moves
 
     def get_all_legal_moves(self):
-        return self.get_legal_moves(self.all_legal_moves)
+        return self.get_legal_moves(self.move_categories_dict)
 
     def get_enemies_legal_moves(self, categories):
         # Get a dic of legal moves depending on the requested category
@@ -609,6 +737,18 @@ class Board:
                 legal_moves[category] = self.RED_SINGLES << 7 & self.BLUE_SINGLES
             elif category == "singles_kill_right_double":
                 legal_moves[category] = self.RED_SINGLES << 7 & self.BLUE_DOUBLES
+
+            # Singles upgrade left
+            elif category == "singles_upgrade_left":
+                legal_moves[category] = self.RED_SINGLES << 1 & self.RED_SINGLES
+
+            # Singles upgrade right
+            elif category == "singles_upgrade_right":
+                legal_moves[category] = self.RED_SINGLES >> 1 & self.RED_SINGLES
+
+            # singles upgrade front
+            elif category == "singles_upgrade_front":
+                legal_moves[category] = self.RED_SINGLES >> 8 & self.RED_SINGLES
 
             # Doubles to left-left-front
             elif category == "doubles_l_l_f_empty":
@@ -651,10 +791,10 @@ class Board:
                 legal_moves[category] = self.RED_DOUBLES << 6 & self.BLUE_DOUBLES
 
 
-            return legal_moves
+        return legal_moves
 
     def get_all_enemy_legal_moves(self):
-        return self.get_enemies_legal_moves(self.all_legal_moves)
+        return self.get_enemies_legal_moves(self.move_categories_dict)
 
     def get_state(self):
         # Get the current state of the board
@@ -715,19 +855,10 @@ class Board:
             print(f' {row}')
         print('   A B C D E F G H')
 
-    def print_legal_moves(self):
-        all_legal_moves = self.get_all_legal_moves()
-        for move_category in all_legal_moves:
-            print(move_category + ":   " + format(all_legal_moves[move_category], '64b'))
-
-        return all_legal_moves
-
-    def print_enemy_legal_moves(self):
-        all_enemy_legal_moves = self.get_all_enemy_legal_moves()
-        for move_category in all_enemy_legal_moves:
-            print(move_category + ":   " + format(all_enemy_legal_moves[move_category], '64b'))
-
-        return all_enemy_legal_moves
+    def print_legal_moves(self, selected_legal_moves):
+        for move_category in selected_legal_moves:
+            print(move_category + ":   " + format(selected_legal_moves[move_category], '64b'))
+        print('----------------------------------------------------------------')
 
 
 class Move:
@@ -823,10 +954,7 @@ def main():
 
     i = 0
     players = ["Blue", "Red"]
-
-    # Print & Get legal moves
-    print("Legal Moves:")
-    legal_moves = board.print_legal_moves()
+    turn = players[0]
 
     while True:
         # Clear console
@@ -836,45 +964,128 @@ def main():
         board.print_board()
 
         # Ask for the next move
-        print(players[i%2] + "'s turn")
-        next_move = input("Enter next move, type 'quit' to exit or 'back' to undo last move: ")
+        print("-----------------------")
+        print(turn + "'s turn")
+        print("- 'quit'")
+        print("- 'back'")
+        print("- 'get'")
+        next_move = input("Enter next move:")
         if next_move.lower() == 'quit':
             break
-        if next_move.lower() == 'back':
+        elif next_move.lower() == 'back':
             board.undo_move()
-            i += 1
-            board.print_board()
+            if i == 0:
+                print("Already in first turn")
+            else:
+                i -= 1
             continue
+        elif next_move.lower() == 'get':
+            print('Dictionary of legal moves:')
+            print("""
+{
+    # singles
+    '1': {
+        # move
+        '1': {
+            '1': 'singles_left_empty',
+            '2': 'singles_front_empty',
+            '3': 'singles_right_empty',
+        },
+        # kill
+        '2': {
+            # left
+            '1': {
+                '1': 'singles_kill_left_single',
+                '2': 'singles_kill_left_double'
+            },
+            # right
+            '2': {
+                '1': 'singles_kill_right_single',
+                '2': 'singles_kill_right_double',
+            }
+        },
+        # upgrade
+        '3': {
+            '1': 'singles_upgrade_left',
+            '2': 'singles_upgrade_front',
+            '3': 'singles_upgrade_right'
+        }
+    },
+    # doubles
+    '2': {
+        # move
+        '1': {
+            '1': 'doubles_l_l_f_empty',
+            '2': 'doubles_f_f_l_empty',
+            '3': 'doubles_f_f_r_empty',
+            '4': 'doubles_r_r_f_empty',
+        },
+        # kill
+        '2': {
+            # l_l_f
+            '1': {
+                '1': 'doubles_kill_l_l_f_single',
+                '2': 'doubles_kill_l_l_f_double'
+            },
+            # f_f_l
+            '2': {
+                '1': 'doubles_kill_f_f_l_single',
+                '2': 'doubles_kill_f_f_l_double',
+            },
+            # f_f_r
+            '3': {
+                '1': 'doubles_kill_f_f_r_single',
+                '2': 'doubles_kill_f_f_r_double',
+            },
+            # r_r_f
+            '4': {
+                '1': 'doubles_kill_r_r_f_single',
+                '2': 'doubles_kill_r_r_f_double',
+            }
+        }
+    }
+}
+                    """)
+            print()
+            print('- alle')
+            print('- number')
+            move_categories = input('Enter move category:')
 
-        # Convert input to Coordinates
-        try:
-            from_square, to_square = next_move.upper().split('-')
-            from_coordinate = Coordinate[from_square]
-            to_coordinate = Coordinate[to_square]
-        except ValueError:
-            print("Please enter moves in the format 'F3-F4'.")
+            # parse move_categories
+            selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
+            # get legal moves
+            if turn == 'Blue':
+                selected_legal_moves = board.get_legal_moves(selected_categories)
+            else:
+                selected_legal_moves = board.get_enemies_legal_moves(selected_categories)
+            # print legal moves
+            board.print_legal_moves(selected_legal_moves)
             continue
-        except KeyError:
-            print("Invalid coordinates. Try again.")
-            continue
+        else:
+            # Convert input to Coordinates
+            try:
+                from_square, to_square = next_move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+            except ValueError:
+                print("Please enter moves in the format 'F3-F4'.")
+                continue
+            except KeyError:
+                print("Invalid coordinates. Try again.")
+                continue
 
-        # Set turn
-        turn = players[i % 2]
-        i += 1
 
         # Create and apply the move
         move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
-        board.apply_move(move)
+        response = board.apply_move(move)
 
-        # Print & Get legal moves
-        print(players[i%2] + "'s legal moves:")
-        if turn == "Blue":
-            legal_moves = board.print_legal_moves()
-        else:
-            legal_moves = board.print_enemy_legal_moves()
+        # Increment turn
+        if response.startswith('Good:'):
+            i += 1
+            turn = players[i % 2]
 
         # Check if the game is over
-        game_over = board.is_game_over(legal_moves)
+        game_over = board.is_game_over()
         if game_over != "Game not over":
             print(game_over)
             break
