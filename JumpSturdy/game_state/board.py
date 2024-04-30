@@ -739,58 +739,6 @@ class Board:
 
         return legal_moves
 
-    def get_all_legal_moves(self):
-        return self.get_legal_moves(self.move_categories_dict)
-
-    def get_enemies_legal_moves(self, selected_categories):
-        # Get a dic of legal moves depending on the requested category
-        legal_moves = {}
-
-        for category in selected_categories:
-            if category.startswith("singles"):
-                if "front" in category:
-                    to_coordinates = shift_pieces(self.RED_SINGLES, -self.shift_map[category])
-                else:
-                    to_coordinates = shift_pieces(self.RED_SINGLES, self.shift_map[category])
-            elif category.startswith("doubles"):
-                to_coordinates = shift_pieces(self.RED_DOUBLES, self.shift_map[category])
-            else:
-                return "Error: Unknown category"
-
-            if "left" in category or "f_f_l" in category:
-                to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
-            elif "right" in category or "f_f_r" in category:
-                to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
-            elif "l_l_f" in category:
-                to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
-            elif "r_r_f" in category:
-                to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
-
-            if "kill" in category:
-                if category.endswith("singles"):
-                    to_coordinates &= self.BLUE_SINGLES
-                elif category.endswith("doubles"):
-                    to_coordinates &= self.BLUE_DOUBLES
-            elif "upgrade" in category:
-                to_coordinates &= self.RED_SINGLES
-            else:
-                if category.endswith("empty"):
-                    to_coordinates &= ~self.BLUE_SINGLES & ~self.RED_SINGLES & ~self.BLUE_DOUBLES & ~self.RED_DOUBLES & ~self.FORBIDDEN_SQUARES_MASK
-                elif category.endswith("singles"):
-                    to_coordinates &= self.RED_SINGLES
-                elif category.endswith("doubles"):
-                    to_coordinates &= self.RED_DOUBLES
-
-            if "front" in category:
-                legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, self.shift_map[category])
-            else:
-                legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, - self.shift_map[category])
-
-        return legal_moves
-
-    def get_all_enemy_legal_moves(self):
-        return self.get_enemies_legal_moves(self.move_categories_dict)
-
     def get_state(self):
         # Get the current state of the board
         return self.actual_state
@@ -855,10 +803,6 @@ class Board:
         for move_category, moves in selected_legal_moves.items():
             print(f"{move_category}: {', '.join(moves)}")
         print('------------------------------------------------------------------------------------------')
-
-    def get_random_move(self):
-        # Get a random move from the selected legal moves
-        return choice(self.get_all_legal_moves())
 
     def select_random_move(self, selected_legal_moves):
         # Get a random move from the selected legal moves
