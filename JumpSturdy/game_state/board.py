@@ -5,25 +5,20 @@ from random import choice
 def there_is(bitboard, n):
     """Check if the nth bit of the bitboard is set (1)."""
     mask = 1 << 64 >> (n.value)
-    result1 = (bitboard & mask) != 0
-    #mask = format(1 << 64 >> (n.value), '064b')
-    #bitboard = format(bitboard, '064b')
-    #result2 = (bitboard and mask) != 0
-    return result1
+    return (bitboard & mask) != 0
 
 def add_nth_bit(bitboard, n):
     """Set the nth bit of the bitboard to 1."""
     mask = 1 << 64 >> n.value
-    result1 = bitboard | mask
-    return result1
+    return bitboard | mask
 
 def clear_nth_bit(bitboard, n):
     """Clear the nth bit of 'number' to 0."""
     all_ones = 0xFFFFFFFFFFFFFFFF
     nth_bit_set = 1 << 64 >> n.value
     mask = all_ones ^ nth_bit_set
-    result1 = bitboard & mask
-    return result1
+    return bitboard & mask
+
 def get_deepest_keys(d, container):
     for k, v in d.items():
         if isinstance(v, dict):
@@ -90,7 +85,6 @@ def parse_move_categories(input_str, move_categories_dict):
 
     return selected_move_categories
 
-
 def shift_pieces(bitboard, shift):
     if shift > 0:
         return bitboard >> shift
@@ -100,8 +94,8 @@ def shift_pieces(bitboard, shift):
 
 class Board:
     # Class-level constants for masks
-    FIRST_6_SQUARES_MASK = 0b000111111
-    LAST_6_SQUARES_MASK = 0b111111 << (64 - 6)
+    FIRST_6_SQUARES_MASK = 0b001111110
+    LAST_6_SQUARES_MASK = 9079256848778919936
     FORBIDDEN_SQUARES_MASK = 9295429630892703873
     FORBIDDEN_LEFT_MASK = 0b0000000100000001000000010000000100000001000000010000000100000001
     FORBIDDEN_RIGHT_MASK = 0b1000000010000000100000001000000010000000100000001000000010000000
