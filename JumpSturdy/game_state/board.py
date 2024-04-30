@@ -868,9 +868,16 @@ class Board:
 
     def select_random_move(self, selected_legal_moves):
         # Get a random move from the selected legal moves
-        random_moves = []
-        get_deepest_keys(random_moves, selected_legal_moves)
-        return choice(selected_legal_moves)
+        non_empty_categories = {category: moves for category, moves in selected_legal_moves.items() if moves}
+
+        if non_empty_categories:
+            # Choose a random category from those that are not empty
+            random_category = choice(list(non_empty_categories.keys()))
+            # Choose a random move from the selected category's list
+            random_move = choice(non_empty_categories[random_category])
+            return random_move
+        else:
+            return "No legal moves available"
 
 
 class Move:
@@ -1033,35 +1040,25 @@ def main():
             # parse move_categories
             selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
             # get legal moves
-            if turn == 'Blue':
-                selected_legal_moves = board.get_legal_moves(selected_categories)
-            else:
-                selected_legal_moves = board.get_enemies_legal_moves(selected_categories)
+            selected_legal_moves = board.get_legal_moves(selected_categories, turn)
+            # select random move
+            next_move = board.select_random_move(selected_legal_moves)
 
+            if next_move == "No legal moves available":
+                print(f"No legal moves of {move_categories} available")
+                continue
 
-            random_move = board.select_random_move(selected_legal_moves)
-
-            # Create and apply the move
-            move = Move(player=turn, fromm=random_move.from_, to=random_move.to)
-            response = board.apply_move(move)
-            print("-----------------------")
-            print(response)
-            print("-----------------------")
-
-
+        # Convert input to Coordinates
+        try:
+            from_square, to_square = next_move.upper().split('-')
+            from_coordinate = Coordinate[from_square]
+            to_coordinate = Coordinate[to_square]
+        except ValueError:
+            print("Please enter moves in the format 'H8-H7'.")
             continue
-        else:
-            # Convert input to Coordinates
-            try:
-                from_square, to_square = next_move.upper().split('-')
-                from_coordinate = Coordinate[from_square]
-                to_coordinate = Coordinate[to_square]
-            except ValueError:
-                print("Please enter moves in the format 'H8-H7'.")
-                continue
-            except KeyError:
-                print("Invalid coordinates. Try again.")
-                continue
+        except KeyError:
+            print("Invalid coordinates. Try again.")
+            continue
 
 
         # Create and apply the move
