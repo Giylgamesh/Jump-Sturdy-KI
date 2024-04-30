@@ -596,13 +596,13 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
-                        if move.to.value == move.from_.value + 6 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
+                        if move.to.value == move.from_.value - 6 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 10 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
+                        elif move.to.value == move.from_.value - 10 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 15 and move.to.value in [16,24,32,40,48,56]:
+                        elif move.to.value == move.from_.value - 15 and move.to.value in [9,17,25,33,41,49]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 17 and move.to.value in [9,17,25,33,41,49,]:
+                        elif move.to.value == move.from_.value - 17 and move.to.value in [16,24,32,40,48,56]:
                             return "Error: Invalid move"
 
                         self.last_state = self.capture_state()
@@ -702,20 +702,32 @@ class Board:
         enemy_doubles = self.RED_DOUBLES if player_color == "Blue" else self.BLUE_DOUBLES
 
         for category in selected_categories:
-            direction_multiplier = -1 if player_color == "Red" and "front" in category else 1
+            direction_multiplier = -1 if player_color == "Red" else 1
 
             to_coordinates = shift_pieces(friend_singles if category.startswith("singles") else friend_doubles,
                                           direction_multiplier * self.shift_map[category])
 
             # Apply masks and filters based on the category specifics
             if "left" in category or "f_f_l" in category:
-                to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
+                if player_color == "Red":
+                    to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
+                else:
+                    to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
             elif "right" in category or "f_f_r" in category:
-                to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
+                if player_color == "Red":
+                    to_coordinates &= ~self.FORBIDDEN_LEFT_MASK
+                else:
+                    to_coordinates &= ~self.FORBIDDEN_RIGHT_MASK
             elif "l_l_f" in category:
-                to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
+                if player_color == "Red":
+                    to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
+                else:
+                    to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
             elif "r_r_f" in category:
-                to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
+                if player_color == "Red":
+                    to_coordinates &= ~self.FORBIDDEN_LEFT_LEFT_MASK
+                else:
+                    to_coordinates &= ~self.FORBIDDEN_RIGHT_RIGHT_MASK
 
             if "kill" in category:
                 to_coordinates &= enemy_singles if category.endswith("singles") else enemy_doubles
@@ -729,8 +741,7 @@ class Board:
                 elif category.endswith("doubles"):
                     to_coordinates &= friend_doubles
 
-            shift_direction = self.shift_map[category] if "front" in category and player_color == "Red" else -self.shift_map[category]
-            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, shift_direction)
+            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, direction_multiplier * -1 * self.shift_map[category])
 
         return legal_moves
 
