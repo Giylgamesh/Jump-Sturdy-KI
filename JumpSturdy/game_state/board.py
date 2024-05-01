@@ -100,40 +100,6 @@ def validate_string(input_string):
     for char in input_string:
         if char not in allowed_chars:
             return False
-    # Validate allowed characters in the entire string
-    #if not set(input_string).issubset(allowed_chars):
-    #    return False
-
-    # Split the input string into rows
-    #rows = input_string.split('/')
-
-    # Validate the number of rows
-    #if len(rows) != 8:
-    #    return False
-
-    # Validate each row for correct length and content
-    #for row in rows:
-    #    space_count = 0
-    #    i = 0
-    #    while i < len(row):
-    #        char = row[i]
-    #        if char.isdigit():
-    #            space_count += int(char)
-    #        elif char in {'r', 'b'}:
-    #            # Check for 'r0' or 'b0' pattern
-    #            if i + 1 < len(row) and row[i + 1] == '0':
-    #                space_count += 1
-    #                i += 1
-    #            else:
-    #                space_count += 1
-    #        else:
-    #            return False
-    #        i += 1
-
-    # If space count isn't exactly 8, return False
-    #    if space_count != 8:
-    #        return False
-
     return True
 
 
@@ -908,6 +874,12 @@ class Board:
             print(f"{move_category}: {', '.join(moves)}")
         print('------------------------------------------------------------------------------------------')
 
+    def get_legal_moves_list(self,selected_legal_moves):
+        legal_moves_array = []
+        for move_category, moves in selected_legal_moves.items():
+            legal_moves_array.extend(moves)
+        return legal_moves_array
+
     def select_random_move(self, selected_legal_moves):
         # Get a random move from the selected legal moves
         non_empty_categories = {category: moves for category, moves in selected_legal_moves.items() if moves}
@@ -1012,8 +984,7 @@ class Coordinate(Enum):
 def main():
     board = Board()
     #board.initialize()
-    #board.fen_notation_into_bb("2bbb0b0b0/1bbb0b0b0b0b01/8/8/8/1r01r04/2r01r0r0r01/r0r0r0r0r0r0")
-    board.fen_notation_into_bb("bb5/1bb6/bb6b0/b06r0/r0b06/6rb1/4rr3/6")
+    board.fen_notation_into_bb("8/2b02b02/2r02r02/8/8/2b02b02/2r02r02/8")
 
     i = 0
     players = ["Blue", "Red"]
@@ -1065,7 +1036,7 @@ def main():
             selected_categories = parse_move_categories(move_categories, board.move_categories_dict)
             # get legal moves
             selected_legal_moves = board.get_legal_moves(selected_categories, turn)
-
+            board.get_legal_moves_list(selected_legal_moves)
             # print legal moves
             board.print_legal_moves(selected_legal_moves)
             continue
