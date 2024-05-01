@@ -91,6 +91,13 @@ def shift_pieces(bitboard, shift):
     else:
         return bitboard << -shift
 
+def validate_string(input_string):
+    allowed_chars = set("0123456789rb/")
+    for char in input_string:
+        if char not in allowed_chars:
+            return False
+    return True
+
 
 class Board:
     # Class-level constants for masks
@@ -215,6 +222,65 @@ class Board:
         self.RED_BLOCKED = 0b0000000000000000000000000000000000000000000000000000000000000000
         self.last_state = None
         self.actual_state = self.capture_state()
+
+    def fen_notation_into_bb(self, notation):
+        # Auslesen der vorgegebenen String Notation vom Server in unsere BitBoards für Pieces
+        if validate_string(notation) == True:
+            # Checke,ob der FEN String ein gültiger ist
+            boardPos = 63
+            i = 0
+            # Gehe die String Notation bis zum Schluss durch.
+            while i < len(notation):
+                if boardPos==63 or boardPos==56 or boardPos==7 or boardPos==0:
+                    boardPos-=1
+                    continue
+                # Setze den String in eine Binäre Darstellung und befülle ihn 60 mal mit der "0", weil unsere BitBoards nur 60 Felder haben.
+                binary = "0" * 64
+                # Teile den String an der Board Position in der wir uns gerade gefinden und setze eine 1 dazwischen.
+                binary = binary[boardPos + 1:] + "1" + binary[0:boardPos]
+                # Schaue ob das Zeichen aus der Notation ein "r" ist.
+                if notation[i] == "r":
+                    # Schaue, ob das nächste Zeichen aus der Notation ebenfalls ein "r" ist, denn daraus Ergibt sich ein Pferd.
+                    if notation[i] == notation[i + 1]:
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Pferde.
+                        self.RED_DOUBLES += int(binary, 2)
+                        self.RED_BLOCKED += int(binary, 2)
+                    # Schaue, ob das nächste Zeichen aus der Notation ein "b" ist, denn daraus Ergibt sich ein captured red pawn(Mir fällt der deutsche Name nicht ein).
+                    elif notation[i + 1] == "b":
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured red pawn.
+                        self.BLUE_BLOCKED += int(binary, 2)
+                        self.RED_BLOCKED += int(binary, 2)
+                    else:
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Bauern.
+                        self.RED_SINGLES += int(binary, 2)
+                # Falls das Zeichen ein "/" soll dieser Schleifendurchlauf überprüfen werden, da es kein Zeichen ist, welches im Board notwendig ist.
+                elif notation[i] == "/":
+                    i += 1
+                    continue
+                # Falls das Zeichen aus der Notation ein "b" ist.
+                elif notation[i] == "b":
+                    if notation[i] == notation[i + 1]:
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Pferde.
+                        self.BLUE_DOUBLES += int(binary, 2)
+                        self.BLUE_BLOCKED += int(binary, 2)
+                    elif notation[i + 1] == "r":
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured blue pawn.
+                        self.RED_DOUBLES += int(binary, 2)
+                        self.BLUE_BLOCKED += int(binary, 2)
+                    else:
+                        # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für blaue Bauern.
+                        self.BLUE_SINGLES += int(binary, 2)
+                # Falls das Zeichen aus der Notation eine Zahl ist.
+                else:
+                    # Reduziere die Board Position um die angegebene Zahl für die leeren Felder.
+                    boardPos -= int(notation[i])
+                    i += 1
+                    continue
+                # Reduziere die Board Position um 1 und erhöhe die nächste Iteration für die Schleife um 2.
+                boardPos -= 1
+                i += 2
+        else:
+            self.initialize()
 
     def capture_state(self):
         # Capture the current state of the board attributes
@@ -907,7 +973,8 @@ class Coordinate(Enum):
 
 def main():
     board = Board()
-    board.initialize()
+    #board.initialize()
+    board.fen_notation_into_bb("6/1bb1b02b01/8/2r05/3r01b02/5r0r02/2rr1r03/6")
 
     i = 0
     players = ["Blue", "Red"]
