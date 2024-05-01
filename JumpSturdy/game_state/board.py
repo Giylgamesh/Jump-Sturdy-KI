@@ -96,6 +96,40 @@ def validate_string(input_string):
     for char in input_string:
         if char not in allowed_chars:
             return False
+    # Validate allowed characters in the entire string
+    #if not set(input_string).issubset(allowed_chars):
+    #    return False
+
+    # Split the input string into rows
+    #rows = input_string.split('/')
+
+    # Validate the number of rows
+    #if len(rows) != 8:
+    #    return False
+
+    # Validate each row for correct length and content
+    #for row in rows:
+    #    space_count = 0
+    #    i = 0
+    #    while i < len(row):
+    #        char = row[i]
+    #        if char.isdigit():
+    #            space_count += int(char)
+    #        elif char in {'r', 'b'}:
+    #            # Check for 'r0' or 'b0' pattern
+    #            if i + 1 < len(row) and row[i + 1] == '0':
+    #                space_count += 1
+    #                i += 1
+    #            else:
+    #                space_count += 1
+    #        else:
+    #            return False
+    #        i += 1
+
+    # If space count isn't exactly 8, return False
+    #    if space_count != 8:
+    #        return False
+
     return True
 
 
