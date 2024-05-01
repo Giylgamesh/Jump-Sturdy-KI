@@ -248,7 +248,7 @@ class Board:
                     # Schaue, ob das nächste Zeichen aus der Notation ein "b" ist, denn daraus Ergibt sich ein captured red pawn(Mir fällt der deutsche Name nicht ein).
                     elif notation[i + 1] == "b":
                         # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für captured red pawn.
-                        self.BLUE_BLOCKED += int(binary, 2)
+                        self.BLUE_DOUBLES += int(binary, 2)
                         self.RED_BLOCKED += int(binary, 2)
                     else:
                         # Wandle den String in ein binäres int um und addiere es auf das aktuelle BitBoard für rote Bauern.
@@ -974,7 +974,7 @@ class Coordinate(Enum):
 def main():
     board = Board()
     #board.initialize()
-    board.fen_notation_into_bb("6/1bb1b02b01/8/2r05/3r01b02/5r0r02/2rr1r03/6")
+    board.fen_notation_into_bb("2bbb0b0b0/1bbb0b0b0b0b01/8/8/8/1r01r04/2r01r0r0r01/r0r0r0r0r0r0")
 
     i = 0
     players = ["Blue", "Red"]
