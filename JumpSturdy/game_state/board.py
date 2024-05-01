@@ -55,7 +55,11 @@ def parse_move_categories(input_str, move_categories_dict):
                                     'doubles_kill_f_f_r_singles': True,
                                     'doubles_kill_f_f_r_doubles': True,
                                     'doubles_kill_r_r_f_singles': True,
-                                    'doubles_kill_r_r_f_doubles': True
+                                    'doubles_kill_r_r_f_doubles': True,
+                                    'doubles_l_l_f_singles': True,
+                                    'doubles_f_f_l_singles': True,
+                                    'doubles_f_f_r_singles': True,
+                                    'doubles_r_r_f_singles': True
                                     }
         return selected_move_categories
 
@@ -1008,7 +1012,8 @@ class Coordinate(Enum):
 def main():
     board = Board()
     #board.initialize()
-    board.fen_notation_into_bb("2bbb0b0b0/1bbb0b0b0b0b01/8/8/8/1r01r04/2r01r0r0r01/r0r0r0r0r0r0")
+    #board.fen_notation_into_bb("2bbb0b0b0/1bbb0b0b0b0b01/8/8/8/1r01r04/2r01r0r0r01/r0r0r0r0r0r0")
+    board.fen_notation_into_bb("bb5/1bb6/bb6b0/b06r0/r0b06/6rb1/4rr3/6")
 
     i = 0
     players = ["Blue", "Red"]
