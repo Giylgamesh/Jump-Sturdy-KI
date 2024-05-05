@@ -1094,6 +1094,5 @@ def main():
             print(game_over)
             break
 
-
 if __name__ == "__main__":
     main()
