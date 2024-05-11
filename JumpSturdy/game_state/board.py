@@ -2,15 +2,18 @@ from enum import Enum
 import os
 from random import choice
 
+
 def there_is(bitboard, n):
     """Check if the nth bit of the bitboard is set (1)."""
     mask = 1 << 64 >> (n.value)
     return (bitboard & mask) != 0
 
+
 def add_nth_bit(bitboard, n):
     """Set the nth bit of the bitboard to 1."""
     mask = 1 << 64 >> n.value
     return bitboard | mask
+
 
 def clear_nth_bit(bitboard, n):
     """Clear the nth bit of 'number' to 0."""
@@ -18,6 +21,7 @@ def clear_nth_bit(bitboard, n):
     nth_bit_set = 1 << 64 >> n.value
     mask = all_ones ^ nth_bit_set
     return bitboard & mask
+
 
 def get_deepest_keys(d, container):
     for k, v in d.items():
@@ -27,6 +31,7 @@ def get_deepest_keys(d, container):
             container[v] = True
 
     return container
+
 
 def parse_move_categories(input_str, move_categories_dict):
     selected_move_categories = {}
@@ -89,11 +94,13 @@ def parse_move_categories(input_str, move_categories_dict):
 
     return selected_move_categories
 
+
 def shift_pieces(bitboard, shift):
     if shift > 0:
         return bitboard >> shift
     else:
         return bitboard << -shift
+
 
 def validate_string(input_string):
     allowed_chars = set("0123456789rb/")
@@ -235,8 +242,8 @@ class Board:
             i = 0
             # Gehe die String Notation bis zum Schluss durch.
             while i < len(notation):
-                if boardPos==63 or boardPos==56 or boardPos==7 or boardPos==0:
-                    boardPos-=1
+                if boardPos == 63 or boardPos == 56 or boardPos == 7 or boardPos == 0:
+                    boardPos -= 1
                     continue
                 # Setze den String in eine Binäre Darstellung und befülle ihn 60 mal mit der "0", weil unsere BitBoards nur 60 Felder haben.
                 binary = "0" * 64
@@ -372,9 +379,9 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
-                        if move.to.value == move.from_.value - 1 and move.to.value in [16,24,32,40,48,56]:
+                        if move.to.value == move.from_.value - 1 and move.to.value in [16, 24, 32, 40, 48, 56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 1 and move.to.value in [9,17,25,33,41,49]:
+                        elif move.to.value == move.from_.value + 1 and move.to.value in [9, 17, 25, 33, 41, 49]:
                             return "Error: Invalid move"
                         self.last_state = self.capture_state()
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.from_)
@@ -414,8 +421,9 @@ class Board:
                 # to left-left-front or front-front-left or to front-front-right or right-right-front
                 if move.to.value == move.from_.value + 6 or move.to.value == move.from_.value + 15 or move.to.value == move.from_.value + 17 or move.to.value == move.from_.value + 10:
                     # there is blue single
+                    copy = self.last_state
+                    self.last_state = self.capture_state()
                     if there_is(self.BLUE_SINGLES, move.to):
-                        self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
                         self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
@@ -433,11 +441,10 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Change of double"
                         else:
-                            self.last_state = self.last_state.last_state.copy()
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is red single
                     elif there_is(self.RED_SINGLES, move.to):
-                        self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
@@ -454,7 +461,7 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Killing move"
                         else:
-                            self.last_state = self.last_state.last_state.copy()
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is red double
                     elif there_is(self.RED_DOUBLES, move.to):
@@ -482,15 +489,18 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
-                        if move.to.value == move.from_.value + 6 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
+                        if move.to.value == move.from_.value + 6 and move.to.value in [15, 16, 23, 24, 31, 32, 39, 40,
+                                                                                       47, 48, 55, 56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 10 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
+                        elif move.to.value == move.from_.value + 10 and move.to.value in [9, 10, 17, 18, 25, 26, 33, 34,
+                                                                                          41, 42, 49, 50]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 15 and move.to.value in [16,24,32,40,48,56]:
+                        elif move.to.value == move.from_.value + 15 and move.to.value in [16, 24, 32, 40, 48, 56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 17 and move.to.value in [9,17,25,33,41,49,]:
+                        elif move.to.value == move.from_.value + 17 and move.to.value in [9, 17, 25, 33, 41, 49, ]:
                             return "Error: Invalid move"
 
+                        copy = self.last_state
                         self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
@@ -521,7 +531,7 @@ class Board:
                             else:
                                 return "right-right-front move"
                         else:
-                            self.last_state = self.last_state.last_state.copy()
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                 # to somewhere else
                 else:
@@ -552,9 +562,9 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
-                        if move.to.value == move.from_.value - 1 and move.to.value in [16,24,32,40,48,56]:
+                        if move.to.value == move.from_.value - 1 and move.to.value in [16, 24, 32, 40, 48, 56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value + 1 and move.to.value in [9,17,25,33,41,49]:
+                        elif move.to.value == move.from_.value + 1 and move.to.value in [9, 17, 25, 33, 41, 49]:
                             return "Error: Invalid move"
 
                         self.last_state = self.capture_state()
@@ -589,7 +599,7 @@ class Board:
                         return "Error: Invalid move"
                 # to somewhere else
                 else:
-                    return "Error: Unknown move"
+                    return "Error: S - Unknown move"
             # Red double
             elif there_is(self.RED_DOUBLES, move.from_):
                 # left-left-front or front-front-left or to front-front-right or right-right-front
@@ -597,7 +607,7 @@ class Board:
                     # there is blue single
                     if there_is(self.BLUE_SINGLES, move.to):
                         self.last_state = self.capture_state()
-                        self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
+                        self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
                         # on top of blue blocked
@@ -616,31 +626,31 @@ class Board:
                             return "Error: Missing blocked piece"
                     # there is red single
                     elif there_is(self.RED_SINGLES, move.to):
-                            self.last_state = self.capture_state()
-                            self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
-                            self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
-                            self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
-                            self.RED_BLOCKED = add_nth_bit(self.RED_BLOCKED, move.to)
-                            # on top of blue blocked
-                            if there_is(self.BLUE_BLOCKED, move.from_):
-                                self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
-                                self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
-                                self.actual_state = self.capture_state()
-                                return "Change of double"
-                            # on top of red blocked
-                            elif there_is(self.RED_BLOCKED, move.from_):
-                                self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
-                                self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
-                                self.actual_state = self.capture_state()
-                                return "Change of double"
-                            else:
-                                return "Error: Missing blocked piece"
+                        self.last_state = self.capture_state()
+                        self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
+                        self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
+                        self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
+                        self.RED_BLOCKED = add_nth_bit(self.RED_BLOCKED, move.to)
+                        # on top of blue blocked
+                        if there_is(self.BLUE_BLOCKED, move.from_):
+                            self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
+                            self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
+                            self.actual_state = self.capture_state()
+                            return "Change of double"
+                        # on top of red blocked
+                        elif there_is(self.RED_BLOCKED, move.from_):
+                            self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
+                            self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
+                            self.actual_state = self.capture_state()
+                            return "Change of double"
+                        else:
+                            return "Error: Missing blocked piece"
                     # there is blue double
                     elif there_is(self.BLUE_DOUBLES, move.to):
                         self.last_state = self.capture_state()
-                        self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
-                        self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.to)
-                        self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
+                        self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
+                        self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.to)
+                        self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
                         # on top of blue blocked
                         if there_is(self.BLUE_BLOCKED, move.from_):
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
@@ -660,13 +670,15 @@ class Board:
                         return "Error: Invalid move"
                     # there is nothing
                     else:
-                        if move.to.value == move.from_.value - 6 and move.to.value in [9,10,17,18,25,26,33,34,41,42,49,50]:
+                        if move.to.value == move.from_.value - 6 and move.to.value in [9, 10, 17, 18, 25, 26, 33, 34,
+                                                                                       41, 42, 49, 50]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value - 10 and move.to.value in [15,16,23,24,31,32,39,40,47,48,55,56]:
+                        elif move.to.value == move.from_.value - 10 and move.to.value in [15, 16, 23, 24, 31, 32, 39,
+                                                                                          40, 47, 48, 55, 56]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value - 15 and move.to.value in [9,17,25,33,41,49]:
+                        elif move.to.value == move.from_.value - 15 and move.to.value in [9, 17, 25, 33, 41, 49]:
                             return "Error: Invalid move"
-                        elif move.to.value == move.from_.value - 17 and move.to.value in [16,24,32,40,48,56]:
+                        elif move.to.value == move.from_.value - 17 and move.to.value in [16, 24, 32, 40, 48, 56]:
                             return "Error: Invalid move"
 
                         self.last_state = self.capture_state()
@@ -799,13 +811,16 @@ class Board:
                 to_coordinates &= friend_singles
             else:
                 if category.endswith("empty"):
-                    to_coordinates &= ~(friend_singles | enemy_singles | friend_doubles | enemy_doubles | self.FORBIDDEN_SQUARES_MASK)
+                    to_coordinates &= ~(
+                                friend_singles | enemy_singles | friend_doubles | enemy_doubles | self.FORBIDDEN_SQUARES_MASK)
                 elif category.endswith("singles"):
                     to_coordinates &= friend_singles
                 elif category.endswith("doubles"):
                     to_coordinates &= friend_doubles
 
-            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates, direction_multiplier * -1 * self.shift_map[category])
+            legal_moves[category] = self.parse_to_coordinate_to_move(to_coordinates,
+                                                                     direction_multiplier * -1 * self.shift_map[
+                                                                         category])
 
         return legal_moves
 
@@ -824,7 +839,6 @@ class Board:
         board_array[0][7] = ' '
         board_array[7][0] = ' '
         board_array[7][7] = ' '
-
 
         for i in range(64):
             row = i // 8  # Calculate row index
@@ -874,7 +888,7 @@ class Board:
             print(f"{move_category}: {', '.join(moves)}")
         print('------------------------------------------------------------------------------------------')
 
-    def get_legal_moves_list(self,selected_legal_moves):
+    def get_legal_moves_list(self, selected_legal_moves):
         legal_moves_array = []
         for move_category, moves in selected_legal_moves.items():
             legal_moves_array.extend(moves)
@@ -1075,7 +1089,6 @@ def main():
             print("Invalid coordinates. Try again.")
             continue
 
-
         # Create and apply the move
         move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
         response = board.apply_move(move)
@@ -1087,12 +1100,14 @@ def main():
         if response.startswith('Good:'):
             i += 1
             turn = players[i % 2]
-
+        elif response.startswith('Error:'):
+            break
         # Check if the game is over
         game_over = board.is_game_over()
         if game_over != "Game not over":
             print(game_over)
             break
+
 
 if __name__ == "__main__":
     main()

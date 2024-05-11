@@ -49,38 +49,50 @@ def main():
     i = 0
     turn = blue_player
 
-    while True:
-        if i%2==0:
-            turn = blue_player.color
-            next_move = blue_player.get_random_move()
-        else:
-            turn = red_player.color
-            next_move = red_player.get_random_move()
+    N = 100
+    total = 0
+    for j in range(N):
+        while True:
+            if i%2==0:
+                turn = blue_player.color
+                next_move = blue_player.get_random_move()
+            else:
+                turn = red_player.color
+                next_move = red_player.get_random_move()
 
-        board.print_board()
-        if board.is_game_over() != "Game not over":
-            print(board.is_game_over())
-            break
-        print("-----------------------")
-        print(f"Its {turn}'s turn.")
-        try:
-            from_square, to_square = next_move.upper().split('-')
-            from_coordinate = Coordinate[from_square]
-            to_coordinate = Coordinate[to_square]
-        except ValueError:
-            print("Please enter moves in the format 'H8-H7'.")
-            continue
-        except KeyError:
-            print("Invalid coordinates. Try again.")
-            continue
-        move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
-        response = board.apply_move(move)
-        print("-----------------------")
-        print(next_move)
-        print(response)
-        print("-----------------------")
-        # Increment turn
-        i += 1
+            board.print_board()
+            if board.is_game_over() != "Game not over":
+                print(board.is_game_over())
+                break
+            print("-----------------------")
+            print(f"Its {turn}'s turn.")
+            try:
+                from_square, to_square = next_move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+            except ValueError:
+                print("Please enter moves in the format 'H8-H7'.")
+                continue
+            except KeyError:
+                print("Invalid coordinates. Try again.")
+                continue
+            move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
+            response = board.apply_move(move)
+            print("-----------------------")
+            print(next_move)
+            print(response)
+            print("-----------------------")
+            if response.startswith('Error'):
+                break
+            # Increment turn
+            i += 1
+        print(f"------- TIEFE: {i} -------")
+        total += i
+        i = 0
+
+        board.reset()
+    print(f"N: {N}")
+    print(f"media: {total/N}")
 
 
 if __name__ == "__main__":
