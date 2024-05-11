@@ -364,7 +364,7 @@ class Board:
                         self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
                         self.BLUE_BLOCKED = add_nth_bit(self.BLUE_BLOCKED, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: New double"
+                        return "New double"
                     # there are blue doubles, red singles or red doubles
                     elif (there_is(self.BLUE_DOUBLES, move.to) or
                           there_is(self.RED_SINGLES, move.to) or
@@ -381,11 +381,11 @@ class Board:
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
                         self.actual_state = self.capture_state()
                         if move.to.value == move.from_.value + 8:
-                            return "Good: Frontal move"
+                            return "Frontal move"
                         elif move.to.value == move.from_.value - 1:
-                            return "Good: Left move"
+                            return "Left move"
                         else:
-                            return "Good: Right move"
+                            return "Right move"
                 # to the left-front or right-front
                 elif move.to.value == move.from_.value + 7 or move.to.value == move.from_.value + 9:
                     # there red single
@@ -395,7 +395,7 @@ class Board:
                         self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: Killing move"
+                        return "Killing move"
                     # there is red double
                     elif there_is(self.RED_DOUBLES, move.to):
                         self.last_state = self.capture_state()
@@ -403,7 +403,7 @@ class Board:
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.to)
                         self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: Double killing move"
+                        return "Double killing move"
                     else:
                         return "Error: Invalid move"
                 # to somewhere else
@@ -425,13 +425,13 @@ class Board:
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: change of double"
+                            return "Change of double"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: change of double"
+                            return "Change of double"
                         else:
                             self.last_state = self.last_state.last_state.copy()
                             return "Error: Missing blocked piece"
@@ -446,13 +446,13 @@ class Board:
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Killing move"
+                            return "Killing move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Killing move"
+                            return "Killing move"
                         else:
                             self.last_state = self.last_state.last_state.copy()
                             return "Error: Missing blocked piece"
@@ -467,13 +467,13 @@ class Board:
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Double killing move"
+                            return "Double killing move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Double killing move"
+                            return "Double killing move"
                         else:
                             self.last_state = self.last_state.last_state.copy()
                             return "Error: Missing blocked piece"
@@ -500,26 +500,26 @@ class Board:
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
                             if move.to.value == move.from_.value + 6:
-                                return "Good: left-left-front move"
+                                return "left-left-front move"
                             elif move.to.value == move.from_.value + 15:
-                                return "Good: front-front-left move"
+                                return "front-front-left move"
                             elif move.to.value == move.from_.value + 17:
-                                return "Good: front-front-right move"
+                                return "front-front-right move"
                             else:
-                                return "Good: right-right-front move"
+                                return "right-right-front move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
                             if move.to.value == move.from_.value + 6:
-                                return "Good: left-left-front move"
+                                return "left-left-front move"
                             elif move.to.value == move.from_.value + 15:
-                                return "Good: front-front-left move"
+                                return "front-front-left move"
                             elif move.to.value == move.from_.value + 17:
-                                return "Good: front-front-right move"
+                                return "front-front-right move"
                             else:
-                                return "Good: right-right-front move"
+                                return "right-right-front move"
                         else:
                             self.last_state = self.last_state.last_state.copy()
                             return "Error: Missing blocked piece"
@@ -545,7 +545,7 @@ class Board:
                         self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
                         self.RED_BLOCKED = add_nth_bit(self.RED_BLOCKED, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: New double"
+                        return "New double"
                     elif (there_is(self.RED_DOUBLES, move.to) or
                           there_is(self.BLUE_SINGLES, move.to) or
                           there_is(self.BLUE_DOUBLES, move.to)):
@@ -562,11 +562,11 @@ class Board:
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
                         self.actual_state = self.capture_state()
                         if move.to.value == move.from_.value - 8:
-                            return "Good: Frontal move"
+                            return "Frontal move"
                         elif move.to.value == move.from_.value - 1:
-                            return "Good: Left move"
+                            return "Left move"
                         else:
-                            return "Good: Right move"
+                            return "Right move"
                 # to the left-front or right-front
                 elif move.to.value == move.from_.value - 7 or move.to.value == move.from_.value - 9:
                     # there is blue single
@@ -576,7 +576,7 @@ class Board:
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: Killing move"
+                        return "Killing move"
                     # there is blue double
                     elif there_is(self.BLUE_DOUBLES, move.to):
                         self.last_state = self.capture_state()
@@ -584,7 +584,7 @@ class Board:
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.to)
                         self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
                         self.actual_state = self.capture_state()
-                        return "Good: Double killing move"
+                        return "Double killing move"
                     else:
                         return "Error: Invalid move"
                 # to somewhere else
@@ -605,13 +605,13 @@ class Board:
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Killing move"
+                            return "Killing move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Killing move"
+                            return "Killing move"
                         else:
                             return "Error: Missing blocked piece"
                     # there is red single
@@ -626,13 +626,13 @@ class Board:
                                 self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                                 self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                                 self.actual_state = self.capture_state()
-                                return "Good: change of double"
+                                return "Change of double"
                             # on top of red blocked
                             elif there_is(self.RED_BLOCKED, move.from_):
                                 self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                                 self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                                 self.actual_state = self.capture_state()
-                                return "Good: change of double"
+                                return "Change of double"
                             else:
                                 return "Error: Missing blocked piece"
                     # there is blue double
@@ -646,13 +646,13 @@ class Board:
                             self.BLUE_BLOCKED = clear_nth_bit(self.BLUE_BLOCKED, move.from_)
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Double killing move"
+                            return "Double killing move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
-                            return "Good: Double killing move"
+                            return "Double killing move"
                         else:
                             return "Error: Missing blocked piece"
                     # there is red double
@@ -678,26 +678,26 @@ class Board:
                             self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
                             if move.to.value == move.from_.value - 6:
-                                return "Good: left-left-front move"
+                                return "left-left-front move"
                             elif move.to.value == move.from_.value - 15:
-                                return "Good: front-front-left move"
+                                return "front-front-left move"
                             elif move.to.value == move.from_.value - 17:
-                                return "Good: front-front-right move"
+                                return "front-front-right move"
                             else:
-                                return "Good: right-right-front move"
+                                return "right-right-front move"
                         # on top of red blocked
                         elif there_is(self.RED_BLOCKED, move.from_):
                             self.RED_BLOCKED = clear_nth_bit(self.RED_BLOCKED, move.from_)
                             self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.from_)
                             self.actual_state = self.capture_state()
                             if move.to.value == move.from_.value - 6:
-                                return "Good: left-left-front move"
+                                return "left-left-front move"
                             elif move.to.value == move.from_.value - 15:
-                                return "Good: front-front-left move"
+                                return "front-front-left move"
                             elif move.to.value == move.from_.value - 17:
-                                return "Good: front-front-right move"
+                                return "front-front-right move"
                             else:
-                                return "Good: right-right-front move"
+                                return "right-right-front move"
                         else:
                             return "Error: Missing blocked piece"
                 # to somewhere else

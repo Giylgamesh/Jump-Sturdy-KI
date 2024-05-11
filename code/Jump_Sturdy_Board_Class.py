@@ -120,11 +120,26 @@ class JumpSturdyBoard:
                 list += self.number_to_board_position(i - 9) + "-" + self.number_to_board_position(i) + " "
         #Right capture from RANK 7
         red_pawn_move = ((self.pieceBB[0] &
-                self.rank_7) << 7) & self.blue_pieces & (
+                self.rank_7) << 6) & self.blue_pieces & (
+                                    ~self.file_a & 0b111111111111111111111111111111111111111111111111111111111111)
+        for i in range(60):
+            if ((red_pawn_move >> i) & 1) == 1:
+                list += self.number_to_board_position(i - 6) + "-" + self.number_to_board_position(i) + " "
+        # Left capture from RANK 7
+        red_pawn_move = ((self.pieceBB[0] &
+                          self.rank_7) << 8) & self.blue_pieces & (
+                                ~self.file_h & 0b111111111111111111111111111111111111111111111111111111111111)
+        for i in range(60):
+            if ((red_pawn_move >> i) & 1) == 1:
+                list += self.number_to_board_position(i - 8) + "-" + self.number_to_board_position(i) + " "
+        #One move forward until Rank 6
+        red_pawn_move = ((self.pieceBB[0] & (
+                ~self.rank_7 & 0b111111111111111111111111111111111111111111111111111111111111)) << 8) & self.blue_pieces & (
                                     ~self.file_a & 0b111111111111111111111111111111111111111111111111111111111111)
         for i in range(60):
             if ((red_pawn_move >> i) & 1) == 1:
                 list += self.number_to_board_position(i - 7) + "-" + self.number_to_board_position(i) + " "
+
         return list
 
     def number_to_board_position(self, number):

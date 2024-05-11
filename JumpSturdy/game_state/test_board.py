@@ -326,7 +326,7 @@ class TestBoard(unittest.TestCase):
 
         #Gruppe: MIVS Crew (Gruppe I)
         #Rot ist unten statt oben und trotzdem Züge für b angegeben? Sollten nicht gehen, wenn b oben ist.
-        #"b0b0b02bb/1b01b0bb1b01/2b05/5b02/1r06/8/2r0rrr0rr1r0/r0r01r01r0 b" -> "b0b01b01b0/2b0bbb0bb1b0/8/1b06/5r02/2r05/1r01r0rr1r01/r0r0r02rr b"
+        #"b0b0b02bb/1b01b0bb1b01/2b05/5b02/1r06/8/2r0rrr0rr1r0/r0r01r01r0 r" -> "b0b01b01b0/2b0bbb0bb1b0/8/1b06/5r02/2r05/1r01r0rr1r01/r0r0r02rr b"
         self.wiki_help_function("b0b01b01b0/2b0bbb0bb1b0/8/1b06/5r02/2r05/1r01r0rr1r01/r0r0r02rr b",
                                 "B1-B2, B1-C1, C1-B1, C1-C2, C1-D1, E1-D1, E1-E2 , E1-F1, G1-F1, G1-G2, C2-B2, C2-C3, D2-B3, D2-C4, D2-E4, D2-F3, E2-E3, F2-D3, F2-E4, F2-G4, F2-H3, H2-G2, H2-H3, B4-A4, B4-B5, B4-C4".replace(
                                     " ", ""))
@@ -375,11 +375,10 @@ class TestBoard(unittest.TestCase):
         self.wiki_help_function("3b02/2bb2b02/5b0bb1/2r0b04/2rb3b01/1rr1rr2r0r0/5r02/2rr3 b",
                                 "C2-A3, C2-B4, C2-D4, C2-E3, C5-A6, C5-B7, C5-D7, C5-E6, D4-D5, D4-E4, E1-D1, E1-E2, E1-F1, F2-E2, F2-F3, F2-G2, F3-E3, F3-F4, G3-E4, G3-F5, G3-H5, G5-F5, G5-H6, G5-H5".replace(
                                     " ", ""))
-        #Der Fen String macht keinen Sinn
-        #self.wiki_help_function("1b01b0b01/b1bb0b1bb0b1/1b6/8/7b0/1r2r1rr1/2rr2rr2/r0r1r0r1 b",
-        #                        "A2-A3, A2-B2, B3-A3, B3-B4, B3-C3, C1-B1, C1-D1, C2-A3, C2-B4, C2-F4, C2-E3, D2-D3, D2-E2, E1-D1, E1-E2, E1-F1, F1-E1, F1-G1, F2-D3, F2-E4, F2-G4, F2-H3, G2-G3, G2-H2, H5-G5, H5-G6, H5-H6".replace(
-        #                            " ", ""))
-        #
+        self.wiki_help_function("1b01b0b01/b01bbb01bbb01/1b06/8/7b0/1r02r01rr1/2rr2rr2/r0r01r0r01 b",
+                                "A2-A3, A2-B2, B3-A3, B3-B4, B3-C3, C1-B1, C1-D1, C2-A3, C2-B4, C2-D4, C2-E3, D2-D3, D2-E2, E1-D1, E1-E2, E1-F1, F1-E1, F1-G1, F2-D3, F2-E4, F2-G4, F2-H3, G2-G3, G2-H2, H5-G5, H5-G6, H5-H6".replace(
+                                    " ", ""))
+
         #Gruppe MTY (Gruppe AF)
         self.wiki_help_function("b02b01b0/3b01b02/b02b02b01/b01b05/5r02/1r02r02r0/2rrr02r01/r03r01 b","B1-B2,B1-C1,E1-E2,E1-D1,E1-F1,G1-G2,G1-F1,D2-D3,D2-C2,D2-E2,F2-F3,F2-E2,F2-G2,A3-A4,A3-B3,D3-D4,D3-C3,D3-E3,G3-G4,G3-F3,G3-H3,A4-A5,A4-B4,C4-C5,C4-B4,C4-D4".replace(
                                     " ", ""))
@@ -414,7 +413,7 @@ class TestBoard(unittest.TestCase):
         self.wiki_help_function("2bbb0b0b0/1bbb0b0b0b0b01/8/8/8/1r01r04/2r01r0r0r01/r0r0r0r0r0r0 b",
                                 "C2-C3, D2-D3, E2-E3, F2-F3, G2-G3,G2-H2,F1-E1, G1-F1, D2-C2, E2-D2, F2-E2, G2-F2,E1-E2, F1-F2, G1-G2,E1-F1, F1-G1, C2-D2, D2-E2, E2-F2, F2-G2,D1-C3, B2-A4,D1-E3, B2-C4,B2-D3,D1-F2".replace(
                                     " ", ""))
-        self.wiki_help_function("bb5/1bb6/bb6b/b6r/rb6/6rb1/4rr3/6 b",
+        self.wiki_help_function("bb5/1bb6/bb6b0/b0r0rb5/7rb/5rr2/8/6 b",
                                 "H3-G3,H3-H4, A4-A5,C4-A5,C4-B6, H5-G7,B1-C3, A3-B5, C4-D6,B1-D2, B2-D3, C4-E5,H5-F6,B2-A4".replace(
                                     " ", ""))
         #(Blut)Gruppe AB
@@ -502,9 +501,9 @@ class TestBoard(unittest.TestCase):
                                 "B1-C1, B1-B2, F1-E1, F1-G1, F1-F2, D2-B3, D2-F3, D2-C4, D2-E4, G2-E3, G2-F4, G2-H4, C3-A4, C3-E4, C3- B5, C3-D5, B4-A4, B4-C4, B4-B5".replace(
                                     " ", ""))
         #Einmal den FEN bitte korrigieren
-        #self.wiki_help_function("b03b01/4b02b01/r01b0578/8/3rbb3/1r06/r03r01 b",
-        #                        "B1-C1, B1-B2, F1-E1, F1-G1, F1-F2, D2-C2, D2-E2, D2-D3, G2-F2, G2-H2, G2-G3, C3-B3, C3-D3, C3-C4, E6-C7, E6-G7, E6-D8, E6-F8".replace(
-        #                            " ", ""))
+        self.wiki_help_function("b03b01/3b02b01/r01b05/8/8/4rb3/1r06/r03r01 b",
+                                "B1-C1, B1-B2, F1-E1, F1-G1, F1-F2, D2-C2, D2-E2, D2-D3, G2-F2, G2-H2, G2-G3, C3-B3, C3-D3, C3-C4, E6-C7, E6-G7, E6-D8, E6-F8".replace(
+                                    " ", ""))
         #Gruppe S
         self.wiki_help_function("b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/1r0r01r0r0r01/r0r0r0r0r0r0 r",
                                 "B8-C8, B8-B7, C8-B8, C8-C7, C8-D8, D8-C8, D8-D7, D8-E8, E8-D8, E8-E7, E8-F8, F8-E8,F8-F7, F8-G8, G8-F8, G8-G7, B7-A7, B7-B6, B7-C7, C7-B7, C7-C6, C7-D7, E7-D7, E7-E6, E7-F7,F7-E7, F7-F6, F7-G7, G7-F7, G7-G6, G7-H7, D5-C5, D5-D4, D5-E5".replace(
@@ -551,10 +550,9 @@ class TestBoard(unittest.TestCase):
         self.wiki_help_function(swap_b_r("b0b0b0b01b0/2bb1b03/1b01b01bb2/3r04/2r05/2r01r0r0r01/3r04/r0r0r0r01r0 r"),
                                 "B1-B2,B1-C1,C1-B1,C1-C2,C1-D1,D1-C1,D1-D2,D1-E1,E1-D1,E1-E2,E1-F1,G1-F1,G1-G2,D2-C2,D2-D3,D2-E2,C3-B3,C3-C4,C3-D3,E3-D3,E3-E4,E3-F3,F3-E3,F3-F4,F3-G3,G3-F3,G3-G4,G3-H3,C4-B4,C4-C5,C4-D4,D5-C5,D5-E5".replace(
                                     " ", ""))
-        #Diese Züge machen zum FEN keinen Sinn
-        #self.wiki_help_function("2bb3/5b02/8/2bb5/5rr2/8/3b03r0/6 b",
-        #                        "F5-D4,F5-E3,F5-G3,F5-H4,H7-G7,H7-H6".replace(
-        #                            " ", ""))
+        self.wiki_help_function("2bb3/5b02/8/2bb5/5rr2/8/3b03r0/7 r",
+                                "F5-D4,F5-E3,F5-G3,F5-H4,H7-G7,H7-H6".replace(
+                                    " ", ""))
         #Gruppe Sturdy Jumpers (Guppe P)
         #FEN ist ungültig bzw. falsch herum
         #self.wiki_help_function("1r0r1r0r/3r0r3/1r3r2/2r1r3/4b0b0r1/4b3/1bb1bb4/1b0b1bb1",
@@ -596,9 +594,9 @@ class TestBoard(unittest.TestCase):
                                                       }, "Blue")
         times = []
         start = time.time()
-        for i in range(1000):
+        for i in range(100000):
             startzeit = time.time()
-            board.get_legal_moves_list(selected_legal_moves)
+            move = board.get_legal_moves_list(selected_legal_moves)
             times.append((time.time() - startzeit) * 1000)
         print("Gesamtlaufzeit " + str((time.time() - start) * 1000))
         print("Durchschnitt: " + str(sum(times)/len(times)))
@@ -635,7 +633,7 @@ class TestBoard(unittest.TestCase):
                                                       }, "Red")
         times = []
         start = time.time()
-        for i in range(1000):
+        for i in range(100000):
             startzeit = time.time()
             board.get_legal_moves_list(selected_legal_moves)
             times.append((time.time() - startzeit) * 1000)
@@ -674,7 +672,7 @@ class TestBoard(unittest.TestCase):
                                                       }, "Blue")
         times = []
         start = time.time()
-        for i in range(1000):
+        for i in range(100000):
             startzeit = time.time()
             board.get_legal_moves_list(selected_legal_moves)
             times.append((time.time() - startzeit) * 1000)

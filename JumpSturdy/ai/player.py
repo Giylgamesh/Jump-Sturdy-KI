@@ -50,16 +50,19 @@ def main():
     turn = blue_player
 
     while True:
-        board.print_board()
-        if board.is_game_over() != "Game not over":
-            print(board.is_game_over())
-            break
         if i%2==0:
             turn = blue_player.color
             next_move = blue_player.get_random_move()
         else:
             turn = red_player.color
             next_move = red_player.get_random_move()
+
+        board.print_board()
+        if board.is_game_over() != "Game not over":
+            print(board.is_game_over())
+            break
+        print("-----------------------")
+        print(f"Its {turn}'s turn.")
         try:
             from_square, to_square = next_move.upper().split('-')
             from_coordinate = Coordinate[from_square]
@@ -73,12 +76,11 @@ def main():
         move = Move(player=turn, fromm=from_coordinate, to=to_coordinate)
         response = board.apply_move(move)
         print("-----------------------")
+        print(next_move)
         print(response)
         print("-----------------------")
-
         # Increment turn
-        if response.startswith('Good:'):
-            i += 1
+        i += 1
 
 
 if __name__ == "__main__":
