@@ -824,13 +824,15 @@ class Board:
 
         return legal_moves
 
+    def get_all_legal_moves(self, player_color):
+        # Get a dict of all legal moves
+        all_categories = parse_move_categories("alle", self.move_categories_dict)
+        return self.get_legal_moves(all_categories, player_color)
+
     def get_state(self):
         # Get the current state of the board
         return self.actual_state
 
-    def get_score(self):
-        # Get the score of the current state of the board
-        return 0
 
     def array_board(self):
         # Initialize an empty 8x8 array
@@ -906,6 +908,16 @@ class Board:
             return random_move
         else:
             return "No legal moves available"
+
+    def ask_for_move(self):
+        print("ex: A1-B1")
+        print("- 'quit'")
+        print("- 'back'")
+        print("- 'get'")
+        print("- 'random'")
+        next_move = input("Enter next move:")
+
+        return next_move
 
 
 class Move:
@@ -1015,13 +1027,8 @@ def main():
         print("-----------------------")
         print(turn + "'s turn")
         print("-----------------------")
+        next_move = board.ask_for_move()
 
-        print("ex: A1-B1")
-        print("- 'quit'")
-        print("- 'back'")
-        print("- 'get'")
-        print("- 'random'")
-        next_move = input("Enter next move:")
         if next_move.lower() == 'quit':
             break
         elif next_move.lower() == 'back':
