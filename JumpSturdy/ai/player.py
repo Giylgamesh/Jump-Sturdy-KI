@@ -1,6 +1,7 @@
 import os
 import random
 import math
+import time
 from JumpSturdy.game_state.board import Board, Coordinate, Move
 
 
@@ -15,7 +16,7 @@ def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_
 
         # Update weights based on the outcome
         next_value = 0
-        #history[-1:-10:-2]
+        # history[-1:-10:-2]
         # Iterating over the relevant history excluding the final game state
         for state, features, action, heuristic, player in history[-1:]:
             current_value = reward + discount_factor * next_value
@@ -81,8 +82,8 @@ def simulate_game(board, friendly_player, enemy_player):
         next_move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
 
         # Print for debugging
-        #board.print_board()
-        #print(f"{turn.color} moves {from_square}-{to_square}")
+        # board.print_board()
+        # print(f"{turn.color} moves {from_square}-{to_square}")
 
         # Get heuristic value
         heuristic, features = friendly_player.get_score()
@@ -112,7 +113,7 @@ def simulate_game(board, friendly_player, enemy_player):
             history.append((state, features, next_move, heuristic, turn))
 
             # Reset board
-            #board.reset()
+            # board.reset()
             break
 
     return history, reward
@@ -205,17 +206,59 @@ def control_of_indices(weights, blue_singles_binary, blue_doubles_binary, red_si
     return blue_singles_control + blue_doubles_control + red_singles_control + red_doubles_control
 
 
-def piece_on_indices(weights, blue_type_binary, red_type_binary, indices, type):
+def piece_on_indices(weights, friendly_type_binary, indices, type, friendly):
     # Initialize the control score
     edge_control_score = 0
 
-    # Calculate control score for each type of piece on the edges
-    if any(blue_type_binary[idx] == '1' for idx in indices):
-        edge_control_score += weights[f"friendly_{type}_value"]
-    if any(red_type_binary[idx] == '1' for idx in indices):
-        edge_control_score += weights[f"enemy_{type}_value"]
+    if any(friendly_type_binary[idx] == '1' for idx in indices):
+        if friendly:
+            edge_control_score = weights[f"friendly_{type}_value"]
+        else:
+            edge_control_score = weights[f"enemy_{type}_value"] * -1
 
     return edge_control_score
+
+
+def piece_in_front(weights, first_bitboard, type1, second_bitboard, type2):
+    """Check if the second bitboard has a piece in front of the first bitboard."""
+    for i in range(56):
+        if first_bitboard[i] == '1' and second_bitboard[i + 8] == '1':
+            return weights[f"friendly_{type1}_value"] + weights[f"friendly_{type2}_value"]
+    return 0
+
+def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, enemy_doubles):
+    # Find the furthest front/back friendly/enemy piece
+    most_advanced_single_row = 0
+    most_advanced_double_row = 0
+    less_advanced_single_row = 8
+    less_advanced_double_row = 8
+
+    for row in range(7, -1, -1):
+        if '1' in friendly_sinlges[row * 8:(row + 1) * 8]:
+            most_advanced_single_row = row
+            type = "singles"
+            break
+    for row in range(7, -1, -1):
+        if '1' in friendly_doubles[row * 8:(row + 1) * 8]:
+            most_advanced_double_row = row
+            type = "doubles"
+            break
+    for row in range(7, -1, -1):
+        if '1' in enemy_sinlges[row * 8:(row + 1) * 8]:
+            less_advanced_single_row = row
+            break
+    for row in range(7, -1, -1):
+        if '1' in enemy_doubles[row * 8:(row + 1) * 8]:
+            less_advanced_double_row = row
+            break
+
+    friend = max(most_advanced_single_row, most_advanced_double_row)
+    enemy = min(less_advanced_single_row, less_advanced_double_row)
+
+    # Check if any friendly piece is beyond the furthest enemy piece
+    if friend > enemy:
+            return weights[f"friendly_{type}_value"] + friend
+    return 0
 
 
 def normalize_weights(weights):
@@ -239,43 +282,42 @@ class AIPlayer:
             "friendly_singles_value": 1,
             "friendly_doubles_value": 3,
             "friendly_material_score": 1,
-            "enemy_singles_value": 1,
-            "enemy_doubles_value": 3,
-            "enemy_material_score": 1,
+            "enemy_singles_value": -1,
+            "enemy_doubles_value": -3,
+            "enemy_material_score": -1,
 
-            "friendly_most_advanced_singles": 2,
-            "friendly_most_advanced_doubles": 5 / 2,
-            "enemy_most_advanced_singles": 2,
-            "enemy_most_advanced_doubles": 5 / 2,
-            "friendly_advancement_of_singles": 5 / 2,
-            "friendly_advancement_of_doubles": 3,
-            "enemy_advancement_of_singles": 5 / 2,
-            "enemy_advancement_of_doubles": 3,
+            "friendly_most_advanced_singles": 1,
+            "friendly_most_advanced_doubles": 1,
+            "enemy_most_advanced_singles": -3,
+            "enemy_most_advanced_doubles": -3,
+            "friendly_advancement_of_singles": 1,
+            "friendly_advancement_of_doubles": 1,
+            "enemy_advancement_of_singles": -2,
+            "enemy_advancement_of_doubles": -1,
 
-            "control_of_center": 3,
-            "control_of_edges": 5,
+            "control_of_center": 1,
+            "control_of_edges": 3,
 
-            "friendly_density": 5 / 2,
-            "friendly_mobility": 2,
-            "enemy_density": 5 / 2,
-            "enemy_mobility": 2,
+            "friendly_single_in_edges": 3,
+            "friendly_double_in_edges": 1,
+            "friendly_single_in_center": 2,
+            "friendly_double_in_center": 1,
+            "enemy_single_in_edges": -3,
+            "enemy_double_in_edges": -2,
+            "enemy_single_in_center": -2,
+            "enemy_double_in_center": -2,
 
-            "single_in_edges": 3,
-            "double_in_edges": 1,
-            "single_in_center": 2,
-            "double_in_center": 1
+            "friendly_double_in_back_corner": -1,
+            "friendly_doubles_in_line": 1,
+            "friendly_single_double_in_line": 1,
+            "friendly_singles_in_line": 1,
+            "friendly_piece_is_last": 7,
+
+            "friendly_density": 1,
+            "friendly_mobility": 1,
+            "enemy_density": -1,
+            "enemy_mobility": -4
         }
-
-        """
-            - Mirror ki und rechnerzeit stellen
-            - Passen auf Dummy KI (einfach nach vorne)
-            - 2 Pferde hintereinander sind stark
-            - Pferde in die
-            - Singles die 3 vor sich haben wollen nicht nach vorne
-            - Singles können den spielbrett breit machen
-            - Singles an den kanten die stark atackieren müssen blockiert werden. sie sind sehr gefährlich!
-            - ein pferde in der hintere reihe, an den kanten, ist sehr schwach, weil es sich nicht selbst schützen kann
-        """
 
     def get_random_move(self):
         posible_moves = self.board.get_legal_moves_list(self.board.get_legal_moves({'singles_left_empty': True,
@@ -322,14 +364,15 @@ class AIPlayer:
         red_doubles_binary = bin(self.board.RED_DOUBLES)[2:].zfill(64)
         edges_indices = [8, 16, 24, 32, 40, 48, 15, 23, 31, 39, 47, 55]
         center_indices = [18, 19, 20, 21, 26, 27, 28, 29, 34, 35, 36, 37, 42, 43, 44, 45]
+        corner_indices = [1, 6]
 
         # Material score
         friendly_singles_value = self.weights["friendly_singles_value"] * bin(self.board.BLUE_SINGLES).count('1')
         friendly_doubles_value = self.weights["friendly_doubles_value"] * bin(self.board.BLUE_DOUBLES).count('1')
         friendly_material_score = self.weights["friendly_material_score"] * (
                 friendly_singles_value + friendly_doubles_value)
-        enemy_singles_value = self.weights["enemy_singles_value"] * bin(self.board.RED_SINGLES).count('1') * -1
-        enemy_doubles_value = self.weights["enemy_doubles_value"] * bin(self.board.RED_DOUBLES).count('1') * -1
+        enemy_singles_value = self.weights["enemy_singles_value"] * bin(self.board.RED_SINGLES).count('1')
+        enemy_doubles_value = self.weights["enemy_doubles_value"] * bin(self.board.RED_DOUBLES).count('1')
         enemy_material_score = self.weights["enemy_material_score"] * (enemy_singles_value + enemy_doubles_value)
 
         # Advanced pieces
@@ -338,18 +381,18 @@ class AIPlayer:
         friendly_most_advanced_doubles = self.weights['friendly_most_advanced_doubles'] * most_advanced_pieces(
             blue_doubles_binary, True)
         enemy_most_advanced_singles = self.weights['enemy_most_advanced_singles'] * most_advanced_pieces(
-            red_singles_binary, False) * -1
+            red_singles_binary, False)
         enemy_most_advanced_doubles = self.weights['enemy_most_advanced_doubles'] * most_advanced_pieces(
-            red_doubles_binary, False) * -1
+            red_doubles_binary, False)
 
         friendly_advancement_of_singles = self.weights["friendly_advancement_of_singles"] * advancement_of_pieces(
             blue_singles_binary, friendly=True)
         friendly_advancement_of_doubles = self.weights["friendly_advancement_of_doubles"] * advancement_of_pieces(
             blue_doubles_binary, friendly=True)
         enemy_advancement_of_singles = self.weights["enemy_advancement_of_singles"] * advancement_of_pieces(
-            red_singles_binary, friendly=False) * -1
+            red_singles_binary, friendly=False)
         enemy_advancement_of_doubles = self.weights["enemy_advancement_of_doubles"] * advancement_of_pieces(
-            red_doubles_binary, friendly=False) * -1
+            red_doubles_binary, friendly=False)
 
         # Control over the board
         control_of_center = self.weights["control_of_center"] * control_of_indices(self.weights, blue_singles_binary,
@@ -365,27 +408,76 @@ class AIPlayer:
         friendly_density = self.weights["friendly_density"] * piece_density(blue_singles_binary, blue_doubles_binary)
         friendly_mobility = self.weights["friendly_mobility"] * len(
             self.board.get_legal_moves_list(self.board.get_all_legal_moves(self.color)))
-        enemy_density = self.weights["enemy_density"] * piece_density(red_singles_binary, red_doubles_binary) * -1
+        enemy_density = self.weights["enemy_density"] * piece_density(red_singles_binary, red_doubles_binary)
         if self.color == "Blue":
             enemy_mobility = self.weights["enemy_mobility"] * len(
-                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Red"))) * -1
+                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Red")))
         else:
             enemy_mobility = self.weights["enemy_mobility"] * len(
-                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Blue"))) * -1
+                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Blue")))
 
         # Strategic positions
-        single_in_edges = self.weights["single_in_edges"] * piece_on_indices(self.weights, blue_singles_binary,
-                                                                             red_singles_binary, edges_indices,
-                                                                             "singles")
-        double_in_edges = self.weights["double_in_edges"] * piece_on_indices(self.weights, blue_doubles_binary,
-                                                                             red_doubles_binary, edges_indices,
-                                                                             "doubles")
-        single_in_center = self.weights["single_in_center"] * piece_on_indices(self.weights, blue_singles_binary,
-                                                                               red_singles_binary, center_indices,
-                                                                               "singles")
-        double_in_center = self.weights["double_in_center"] * piece_on_indices(self.weights, blue_doubles_binary,
-                                                                               red_doubles_binary, center_indices,
-                                                                               "doubles")
+        friendly_single_in_edges = self.weights["friendly_single_in_edges"] * piece_on_indices(self.weights,
+                                                                                               blue_singles_binary,
+                                                                                               edges_indices, "singles",
+                                                                                               True)
+        enemy_single_in_edges = self.weights["enemy_single_in_edges"] * piece_on_indices(self.weights,
+                                                                                         red_singles_binary,
+                                                                                         edges_indices, "singles",
+                                                                                         False)
+        friendly_double_in_edges = self.weights["friendly_double_in_edges"] * piece_on_indices(self.weights,
+                                                                                               blue_doubles_binary,
+                                                                                               edges_indices, "doubles",
+                                                                                               True)
+        enemy_double_in_edges = self.weights["enemy_double_in_edges"] * piece_on_indices(self.weights,
+                                                                                         red_doubles_binary,
+                                                                                         edges_indices, "doubles",
+                                                                                         False)
+        friendly_single_in_center = self.weights["friendly_single_in_center"] * piece_on_indices(self.weights,
+                                                                                                 blue_singles_binary,
+                                                                                                 center_indices,
+                                                                                                 "singles", True)
+        enemy_single_in_center = self.weights["enemy_single_in_center"] * piece_on_indices(self.weights,
+                                                                                           red_singles_binary,
+                                                                                           center_indices, "singles",
+                                                                                           False)
+
+        friendly_double_in_center = self.weights["friendly_double_in_center"] * piece_on_indices(self.weights,
+                                                                                                 blue_doubles_binary,
+                                                                                                 center_indices,
+                                                                                                 "doubles", True)
+        enemy_double_in_center = self.weights["enemy_double_in_center"] * piece_on_indices(self.weights,
+                                                                                           red_doubles_binary,
+                                                                                           center_indices, "doubles",
+                                                                                           False)
+
+        # Other cases
+        friendly_double_in_back_corner = self.weights["friendly_double_in_back_corner"] * piece_on_indices(self.weights,
+                                                                                                           blue_doubles_binary,
+                                                                                                           corner_indices,
+                                                                                                           "doubles",
+                                                                                                           True)
+        friendly_doubles_in_line = self.weights["friendly_doubles_in_line"] * piece_in_front(self.weights,
+                                                                                             blue_doubles_binary,
+                                                                                             "doubles",
+                                                                                             blue_doubles_binary,
+                                                                                             "doubles")
+        friendly_single_double_in_line = self.weights["friendly_single_double_in_line"] * piece_in_front(self.weights,
+                                                                                                         blue_singles_binary,
+                                                                                                         "singles",
+                                                                                                         blue_doubles_binary,
+                                                                                                         "doubles")
+        friendly_singles_in_line = self.weights["friendly_singles_in_line"] * piece_in_front(self.weights,
+                                                                                             blue_singles_binary,
+                                                                                             "singles",
+                                                                                             blue_singles_binary,
+                                                                                             "singles")
+        friendly_piece_is_last = self.weights["friendly_piece_is_last"] * piece_is_last(self.weights,
+                                                                                        blue_singles_binary,
+                                                                                        blue_doubles_binary,
+                                                                                        red_singles_binary,
+                                                                                        red_doubles_binary)
+
         bias = self.weights["bias"] * 0
 
         total_score = (bias +
@@ -409,44 +501,53 @@ class AIPlayer:
                        friendly_mobility +
                        enemy_density +
                        enemy_mobility +
-                       single_in_edges +
-                       double_in_edges +
-                       single_in_center +
-                       double_in_center)
+                       friendly_single_in_edges +
+                       friendly_double_in_edges +
+                       friendly_single_in_center +
+                       friendly_double_in_center +
+                       enemy_single_in_edges +
+                       enemy_double_in_edges +
+                       enemy_single_in_center +
+                       enemy_double_in_center +
+                       friendly_double_in_back_corner +
+                       friendly_doubles_in_line +
+                       friendly_single_double_in_line +
+                       friendly_singles_in_line +
+                       friendly_piece_is_last)
 
-        features = {
-            'bias': (self.weights['bias'], bias),
-            'friendly_singles_value': (self.weights['friendly_singles_value'], friendly_singles_value),
-            'friendly_doubles_value': (self.weights['friendly_doubles_value'], friendly_doubles_value),
-            'friendly_material_score': (self.weights['friendly_material_score'], friendly_material_score),
-            'enemy_singles_value': (self.weights['enemy_singles_value'], enemy_singles_value),
-            'enemy_doubles_value': (self.weights['enemy_doubles_value'], enemy_doubles_value),
-            'enemy_material_score': (self.weights['enemy_material_score'], enemy_material_score),
-            'friendly_most_advanced_singles': (
-                self.weights['friendly_most_advanced_singles'], friendly_most_advanced_singles),
-            'friendly_most_advanced_doubles': (
-                self.weights['friendly_most_advanced_doubles'], friendly_most_advanced_doubles),
-            'enemy_most_advanced_singles': (self.weights['enemy_most_advanced_singles'], enemy_most_advanced_singles),
-            'enemy_most_advanced_doubles': (self.weights['enemy_most_advanced_doubles'], enemy_most_advanced_doubles),
-            'friendly_advancement_of_singles': (
-                self.weights['friendly_advancement_of_singles'], friendly_advancement_of_singles),
-            'friendly_advancement_of_doubles': (
-                self.weights['friendly_advancement_of_doubles'], friendly_advancement_of_doubles),
-            'enemy_advancement_of_singles': (
-                self.weights['enemy_advancement_of_singles'], enemy_advancement_of_singles),
-            'enemy_advancement_of_doubles': (
-                self.weights['enemy_advancement_of_doubles'], enemy_advancement_of_doubles),
-            'control_of_center': (self.weights['control_of_center'], control_of_center),
-            'control_of_edges': (self.weights['control_of_edges'], control_of_edges),
-            'friendly_density': (self.weights['friendly_density'], friendly_density),
-            'friendly_mobility': (self.weights['friendly_mobility'], friendly_mobility),
-            'enemy_density': (self.weights['enemy_density'], enemy_density),
-            'enemy_mobility': (self.weights['enemy_mobility'], enemy_mobility),
-            'single_in_edges': (self.weights['single_in_edges'], single_in_edges),
-            'double_in_edges': (self.weights['double_in_edges'], double_in_edges),
-            'single_in_center': (self.weights['single_in_center'], single_in_center),
-            'double_in_center': (self.weights['double_in_center'], double_in_center)
-        }
+        # features = {
+        #     'bias': (self.weights['bias'], bias),
+        #     'friendly_singles_value': (self.weights['friendly_singles_value'], friendly_singles_value),
+        #     'friendly_doubles_value': (self.weights['friendly_doubles_value'], friendly_doubles_value),
+        #     'friendly_material_score': (self.weights['friendly_material_score'], friendly_material_score),
+        #     'enemy_singles_value': (self.weights['enemy_singles_value'], enemy_singles_value),
+        #     'enemy_doubles_value': (self.weights['enemy_doubles_value'], enemy_doubles_value),
+        #     'enemy_material_score': (self.weights['enemy_material_score'], enemy_material_score),
+        #     'friendly_most_advanced_singles': (
+        #         self.weights['friendly_most_advanced_singles'], friendly_most_advanced_singles),
+        #     'friendly_most_advanced_doubles': (
+        #         self.weights['friendly_most_advanced_doubles'], friendly_most_advanced_doubles),
+        #     'enemy_most_advanced_singles': (self.weights['enemy_most_advanced_singles'], enemy_most_advanced_singles),
+        #     'enemy_most_advanced_doubles': (self.weights['enemy_most_advanced_doubles'], enemy_most_advanced_doubles),
+        #     'friendly_advancement_of_singles': (
+        #         self.weights['friendly_advancement_of_singles'], friendly_advancement_of_singles),
+        #     'friendly_advancement_of_doubles': (
+        #         self.weights['friendly_advancement_of_doubles'], friendly_advancement_of_doubles),
+        #     'enemy_advancement_of_singles': (
+        #         self.weights['enemy_advancement_of_singles'], enemy_advancement_of_singles),
+        #     'enemy_advancement_of_doubles': (
+        #         self.weights['enemy_advancement_of_doubles'], enemy_advancement_of_doubles),
+        #     'control_of_center': (self.weights['control_of_center'], control_of_center),
+        #     'control_of_edges': (self.weights['control_of_edges'], control_of_edges),
+        #     'friendly_density': (self.weights['friendly_density'], friendly_density),
+        #     'friendly_mobility': (self.weights['friendly_mobility'], friendly_mobility),
+        #     'enemy_density': (self.weights['enemy_density'], enemy_density),
+        #     'enemy_mobility': (self.weights['enemy_mobility'], enemy_mobility),
+        #     'single_in_edges': (self.weights['single_in_edges'], single_in_edges),
+        #     'double_in_edges': (self.weights['double_in_edges'], double_in_edges),
+        #     'single_in_center': (self.weights['single_in_center'], single_in_center),
+        #     'double_in_center': (self.weights['double_in_center'], double_in_center)
+        # }
 
         return total_score
 
@@ -493,7 +594,8 @@ def main():
 
             # Get next move from the current player
             if turn == blue_player:
-                next_move = board.ask_for_move()
+                # next_move = board.ask_for_move()
+                next_move = turn.get_random_move()
             else:
                 next_move = turn.get_random_move()
 
@@ -512,6 +614,7 @@ def main():
 
             # Increment turn
             i += 1
+
         print(f"------- TIEFE: {i} -------")
         total += i
         i = 0

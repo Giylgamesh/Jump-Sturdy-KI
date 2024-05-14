@@ -910,11 +910,11 @@ class Board:
             return "No legal moves available"
 
     def ask_for_move(self):
-        print("ex: A1-B1")
-        print("- 'quit'")
-        print("- 'back'")
-        print("- 'get'")
-        print("- 'random'")
+        # print("ex: A1-B1")
+        # print("- 'quit'")
+        # print("- 'back'")
+        # print("- 'get'")
+        # print("- 'random'")
         next_move = input("Enter next move:")
 
         return next_move
