@@ -833,7 +833,6 @@ class Board:
         # Get the current state of the board
         return self.actual_state
 
-
     def array_board(self):
         # Initialize an empty 8x8 array
         board_array = [['_' for _ in range(8)] for _ in range(8)]
@@ -919,6 +918,10 @@ class Board:
 
         return next_move
 
+    def copy_board(self):
+        board_copy = Board
+    
+    
 
 class Move:
     def __init__(self, player, fromm, to):
