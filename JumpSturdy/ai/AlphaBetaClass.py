@@ -1,6 +1,6 @@
 import GameTree
 import game_state.board
-import Nodes_JumpSturdy
+import JumpSturdy.ai.JumpSturdyNode as JumpSturdyNode
 
 class AlphaBeta:
     def __init__(self, evaluate):

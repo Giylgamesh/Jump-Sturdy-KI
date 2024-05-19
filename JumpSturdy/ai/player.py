@@ -3,6 +3,7 @@ import random
 import math
 import time
 from JumpSturdy.game_state.board import Board, Coordinate, Move
+from ai.alphabeta import alphabeta
 
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
@@ -551,12 +552,39 @@ class AIPlayer:
 
         return total_score
 
+    def alphabeta(self, alpha, beta, max_player, depth, max_depth):
+    #if depth == 0 or self.is_game_over() != "Game not over":
+        game_over = self.baord.is_game_over()
+        if game_over == False or depth == 0:
+            return self.get_score()
+
+        if max_player:
+            value = -float('inf')
+            # get children of game-tree
+            for move in self.get_legal_moves(["Singles", "Doubles"], "Blue").values():
+                value = max(value, move.alphabeta(alpha, beta, False, depth + 1, max_depth))
+                alpha = max(alpha, value)
+                # beta cutof because beta value is too low to continue searching
+                if alpha >= beta:
+                    break  
+            return value
+        else:
+            value = float('inf')
+            for move in self.get_legal_moves(["Singles", "Doubles"], "Red").values():
+                value = min(value, move.alphabeta(alpha, beta, True, depth + 1, max_depth))
+                beta = min(beta, value)
+                # alpha cutoff
+                if beta <= alpha:
+                    break  
+            return value
+
 
 def main():
     board = Board()
     board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
     blue_player = AIPlayer("Blue", board)
     red_player = AIPlayer("Red", board)
+    # blue_player.alphabeta(alpha="-inf", beta="inf", max_player = 1, depth = 0, max_depth=1)
 
     # Value-Iteration (didn't work)
     # new_weights = value_iteration(blue_player, red_player, board)
