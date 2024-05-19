@@ -2,9 +2,7 @@ import os
 import random
 import math
 import time
-from JumpSturdy.game_state.board import Board, Coordinate, Move
-from ai.alphabeta import alphabeta
-
+from JumpSturdy.game_state.board import Board, Move, Coordinate
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
     blue_player.weights = normalize_weights(blue_player.weights)
@@ -552,40 +550,78 @@ class AIPlayer:
 
         return total_score
 
-    def alphabeta(self, alpha, beta, max_player, depth, max_depth):
-    #if depth == 0 or self.is_game_over() != "Game not over":
-        game_over = self.baord.is_game_over()
-        if game_over == False or depth == 0:
+    def alphabeta(self, alpha: float, beta, max_player: bool, depth: int, max_depth:int):
+        if depth == 0 or self.board.is_game_over() != "Game not over":
             return self.get_score()
-
-        if max_player:
-            value = -float('inf')
+    
+        # parse move_categories
+        #selected_categories = self.board.parse_move_categories(self.board.move_categories, self.board.move_categories_dict)
+        # get legal moves
+        #selected_legal_moves = board.get_legal_moves(selected_categories, turn)
+        # select random move
+        #next_move = board.select_random_move(selected_legal_moves)
+        #self.board.selected_categories = 
+        #self.board.selected_legal_moves = self.board.get_legal_moves(selected_categories, turn)
+        #legal_moves_list = self.board.get_legal_moves
+        
+        legal_moves_list = []
+    
+        if max_player: #if its our turn
+            alphabeta_move = None
+            alphabeta_value = float('-inf')
             # get children of game-tree
-            for move in self.get_legal_moves(["Singles", "Doubles"], "Blue").values():
-                value = max(value, move.alphabeta(alpha, beta, False, depth + 1, max_depth))
-                alpha = max(alpha, value)
+            
+            #for move in self.board.get_legal_moves_list(["Singles", "Doubles"], "Blue").values():
+            
+            #generate list/dictionairy of legal moves to chose from
+            for move in self.board.get_all_legal_moves(self.board, self.color):
+                #chose the next move from list
+                next_move = move
+                # apply move
+                from_square, to_square = next_move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+                move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
+                response = board.apply_move(move)
+                # self.board.undo_move()
+                # move one depth further and set max_player to false
+                value = self.get_score()
+                
+                if value > alphabeta_value:
+                    alphabeta_value = value
+                    alphabeta_move = move
+                alpha = max(alpha, alphabeta_value) 
                 # beta cutof because beta value is too low to continue searching
                 if alpha >= beta:
                     break  
-            return value
+            return alphabeta_value, alphabeta_move
         else:
-            value = float('inf')
-            for move in self.get_legal_moves(["Singles", "Doubles"], "Red").values():
-                value = min(value, move.alphabeta(alpha, beta, True, depth + 1, max_depth))
-                beta = min(beta, value)
-                # alpha cutoff
-                if beta <= alpha:
+            alphabeta_move = None
+            alphabeta_value = float('inf')
+            # get children of game-tree
+            for move in self.board.get_legal_moves(["Singles", "Doubles"], "Blue").values():
+                # move one depth further and set max_player to false
+                value = move.alphabeta(self, alpha, beta, True, depth + 1, max_depth)
+                if value > alphabeta_value:
+                    alphabeta_value = value
+                    alphabeta_move = move
+                alpha = min(beta, alphabeta_value) 
+                # alpha cutof 
+                if beta >= alpha:
                     break  
-            return value
-
-
+            return alphabeta_value, alphabeta_move
+        
 def main():
     board = Board()
     board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
     blue_player = AIPlayer("Blue", board)
     red_player = AIPlayer("Red", board)
-    # blue_player.alphabeta(alpha="-inf", beta="inf", max_player = 1, depth = 0, max_depth=1)
-
+    #result_alphabeta_value, result_alphabeta_move = blue_player.alphabeta(alpha=float('-inf'), beta=float('inf'), max_player=True, depth=0, max_depth=1)
+    #result_alphabeta_value = blue_player.alphabeta(alpha=float('-inf'), beta=float('inf'), max_player=True, depth=0, max_depth=1)
+    #print(result_alphabeta_value)
+    #print(result_alphabeta_move)
+    
+    
     # Value-Iteration (didn't work)
     # new_weights = value_iteration(blue_player, red_player, board)
 
@@ -624,6 +660,7 @@ def main():
             if turn == blue_player:
                 # next_move = board.ask_for_move()
                 next_move = turn.get_random_move()
+                #next_move = turn.alphabeta(alpha=float('-inf'), beta=float('inf'), max_player=True, depth=0, max_depth=1)
             else:
                 next_move = turn.get_random_move()
 
@@ -655,4 +692,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
