@@ -549,67 +549,51 @@ class AIPlayer:
         # }
 
         return total_score
-
-    def alphabeta(self, alpha: float, beta, max_player: bool, depth: int, max_depth:int):
-        if depth == 0 or self.board.is_game_over() != "Game not over":
-            return self.get_score()
-    
-        # parse move_categories
-        #selected_categories = self.board.parse_move_categories(self.board.move_categories, self.board.move_categories_dict)
-        # get legal moves
-        #selected_legal_moves = board.get_legal_moves(selected_categories, turn)
-        # select random move
-        #next_move = board.select_random_move(selected_legal_moves)
-        #self.board.selected_categories = 
-        #self.board.selected_legal_moves = self.board.get_legal_moves(selected_categories, turn)
-        #legal_moves_list = self.board.get_legal_moves
+    def alphabeta_loop(board_state, max_depth):
+        best_action = None
+        for depth in range(max_depth + 1):
+            best_action = alphabeta(board_state, depth, True, float('-inf'), float('inf'))
+        return best_action
         
-        legal_moves_list = []
+def alphabeta(self, board, depth, alpha, beta, max_player, transposition_table, color):
+    board_hash = hash(board)  # Eindeutige Darstellung des Zustands
     
-        if max_player: #if its our turn
-            alphabeta_move = None
-            alphabeta_value = float('-inf')
-            # get children of game-tree
-            
-            #for move in self.board.get_legal_moves_list(["Singles", "Doubles"], "Blue").values():
-            
-            #generate list/dictionairy of legal moves to chose from
-            for move in self.board.get_all_legal_moves(self.board, self.color):
-                #chose the next move from list
-                next_move = move
-                # apply move
-                from_square, to_square = next_move.upper().split('-')
-                from_coordinate = Coordinate[from_square]
-                to_coordinate = Coordinate[to_square]
-                move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
-                response = board.apply_move(move)
-                # self.board.undo_move()
-                # move one depth further and set max_player to false
-                value = self.get_score()
-                
-                if value > alphabeta_value:
-                    alphabeta_value = value
-                    alphabeta_move = move
-                alpha = max(alpha, alphabeta_value) 
-                # beta cutof because beta value is too low to continue searching
-                if alpha >= beta:
-                    break  
-            return alphabeta_value, alphabeta_move
-        else:
-            alphabeta_move = None
-            alphabeta_value = float('inf')
-            # get children of game-tree
-            for move in self.board.get_legal_moves(["Singles", "Doubles"], "Blue").values():
-                # move one depth further and set max_player to false
-                value = move.alphabeta(self, alpha, beta, True, depth + 1, max_depth)
-                if value > alphabeta_value:
-                    alphabeta_value = value
-                    alphabeta_move = move
-                alpha = min(beta, alphabeta_value) 
-                # alpha cutof 
-                if beta >= alpha:
-                    break  
-            return alphabeta_value, alphabeta_move
+    if board_hash in transposition_table:
+        trans_table_entry = transposition_table[board_hash]
+        if trans_table_entry["depth"] >= depth:
+            return trans_table_entry["value"], trans_table_entry["move"]  # Return both value and move
+
+    if depth == 0 or board.is_game_over() != "Game not over":
+        return self.get_score(board), None  # score and no move if game over or depth reached
+
+    best_move = None
+    if max_player:  # max player
+        value = float('-inf')
+        for move in board.get_all_legal_moves(board, color):
+            new_board = board.copy()  # make a copy to avoid modifying original board
+            new_board.apply_move(move)
+            child_value, _ = self.alphabeta(new_board, depth - 1, alpha, beta, False, transposition_table, color)  # Recurse
+            if child_value > value:
+                value = child_value
+                best_move = move
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break  # beta-Cutoff
+    else:  # min player
+        value = float('inf')
+        for move in board.get_all_legal_moves(board, color):
+            new_board = board.copy()
+            new_board.apply_move(move)
+            child_value, _ = self.alphabeta(new_board, depth - 1, alpha, beta, True, transposition_table, color)  # Recurse
+            if child_value < value:
+                value = child_value
+                best_move = move
+            beta = min(beta, value)
+            if alpha >= beta:
+                break  # Alpha-Cutoff
+
+    transposition_table[board_hash] = {"value": value, "depth": depth, "move": best_move}
+    return value, best_move  # Return both value and the best move
         
 def main():
     board = Board()
