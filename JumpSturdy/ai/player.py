@@ -3,6 +3,7 @@ import random
 import math
 import time
 from JumpSturdy.game_state.board import Board, Move, Coordinate
+import copy 
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
     blue_player.weights = normalize_weights(blue_player.weights)
@@ -351,7 +352,7 @@ class AIPlayer:
 
     def get_score(self):
         game_over = self.board.is_game_over()
-        if game_over != "Game Over":
+        if game_over != "Game not over":
             if f"{self.color} wins" in game_over:
                 return 1000
             elif "Red wins" in game_over:
@@ -549,51 +550,119 @@ class AIPlayer:
         # }
 
         return total_score
-    def alphabeta_loop(board_state, max_depth):
+    
+    def alphabeta_loop(self, max_depth): # methode die wir aufrufen in der main, um den alpha beta algorithmus auszuführen
+        '''
+        args:
+            board: aktueller Zustand des Spielbretts
+            max_depth: maximale tiefe, bis zu der unsere alpha beta suche iterativ suchen soll
+            
+        return: bester Zug, der sich aus der alpha beta suche ergeben hat
+        ''' 
         best_action = None
         for depth in range(max_depth + 1):
-            best_action = alphabeta(board_state, depth, True, float('-inf'), float('inf'))
+            best_action = self.alphabeta(depth, float('-inf'), float('inf'), True, {})  # Add missing arguments
         return best_action
         
-def alphabeta(self, board, depth, alpha, beta, max_player, transposition_table, color):
-    board_hash = hash(board)  # Eindeutige Darstellung des Zustands
-    
-    if board_hash in transposition_table:
-        trans_table_entry = transposition_table[board_hash]
-        if trans_table_entry["depth"] >= depth:
-            return trans_table_entry["value"], trans_table_entry["move"]  # Return both value and move
+    def alphabeta(self, depth, alpha, beta, max_player: bool ): 
+        """"transposition_table"""
+        # board_hash = hash(board)  # Eindeutige Darstellung des Zustands
+        
+        # if board_hash in transposition_table:
+        #     trans_table_entry = transposition_table[board_hash]
+        #     if trans_table_entry["depth"] >= depth:
+        #         return trans_table_entry["value"], trans_table_entry["move"]  # Return both value and move
 
-    if depth == 0 or board.is_game_over() != "Game not over":
-        return self.get_score(board), None  # score and no move if game over or depth reached
+        if depth == 0 or self.board.is_game_over() != "Game not over":
+            return self.get_score(), None  # score and no move if game over or depth reached
+        
+        
+        # transposition_table = []
+        best_move = None
+        if max_player:  # max player
+            value = float('-inf')
+            for move in self.board.get_legal_moves_list(self.board.get_legal_moves({'singles_left_empty': True,
+                                                                                    'singles_front_empty': True,
+                                                                                    'singles_right_empty': True,
+                                                                                    'singles_kill_left_singles': True,
+                                                                                    'singles_kill_left_doubles': True,
+                                                                                    'singles_kill_right_singles': True,
+                                                                                    'singles_kill_right_doubles': True,
+                                                                                    'singles_upgrade_left': True,
+                                                                                    'singles_upgrade_front': True,
+                                                                                    'singles_upgrade_right': True,
+                                                                                    'doubles_l_l_f_empty': True,
+                                                                                    'doubles_f_f_l_empty': True,
+                                                                                    'doubles_f_f_r_empty': True,
+                                                                                    'doubles_r_r_f_empty': True,
+                                                                                    'doubles_kill_l_l_f_singles': True,
+                                                                                    'doubles_kill_l_l_f_doubles': True,
+                                                                                    'doubles_kill_f_f_l_singles': True,
+                                                                                    'doubles_kill_f_f_l_doubles': True,
+                                                                                    'doubles_kill_f_f_r_singles': True,
+                                                                                    'doubles_kill_f_f_r_doubles': True,
+                                                                                    'doubles_kill_r_r_f_singles': True,
+                                                                                    'doubles_kill_r_r_f_doubles': True,
+                                                                                    'doubles_l_l_f_singles': True,
+                                                                                    'doubles_f_f_l_singles': True,
+                                                                                    'doubles_f_f_r_singles': True,
+                                                                                    'doubles_r_r_f_singles': True
+                                                                                    }, self.color)):
+                
+                new_board = copy.deepcopy(self.board)
+                new_board.apply_move(move)
+                
+                
+                
+                child_value, _ = self.alphabeta(depth - 1, alpha, beta, False )  # Recurse ,transpositon_table
+                if child_value > value:
+                    value = child_value
+                    best_move = move
+                alpha = max(alpha, value)
+                if alpha >= beta:
+                    break  # beta cutoff
+        else:  # min player
+            value = float('inf')
+            for move in self.board.get_legal_moves_list(self.board.get_legal_moves({'singles_left_empty': True,
+                                                                                    'singles_front_empty': True,
+                                                                                    'singles_right_empty': True,
+                                                                                    'singles_kill_left_singles': True,
+                                                                                    'singles_kill_left_doubles': True,
+                                                                                    'singles_kill_right_singles': True,
+                                                                                    'singles_kill_right_doubles': True,
+                                                                                    'singles_upgrade_left': True,
+                                                                                    'singles_upgrade_front': True,
+                                                                                    'singles_upgrade_right': True,
+                                                                                    'doubles_l_l_f_empty': True,
+                                                                                    'doubles_f_f_l_empty': True,
+                                                                                    'doubles_f_f_r_empty': True,
+                                                                                    'doubles_r_r_f_empty': True,
+                                                                                    'doubles_kill_l_l_f_singles': True,
+                                                                                    'doubles_kill_l_l_f_doubles': True,
+                                                                                    'doubles_kill_f_f_l_singles': True,
+                                                                                    'doubles_kill_f_f_l_doubles': True,
+                                                                                    'doubles_kill_f_f_r_singles': True,
+                                                                                    'doubles_kill_f_f_r_doubles': True,
+                                                                                    'doubles_kill_r_r_f_singles': True,
+                                                                                    'doubles_kill_r_r_f_doubles': True,
+                                                                                    'doubles_l_l_f_singles': True,
+                                                                                    'doubles_f_f_l_singles': True,
+                                                                                    'doubles_f_f_r_singles': True,
+                                                                                    'doubles_r_r_f_singles': True
+                                                                                    }, self.color)):
+                #new_board = self.board.capture_state()  # make a copy to avoid modifying original board
+                new_board = Board(self.board.capture_state())
+                new_board.apply_move(move)
+                child_value, _ = self.alphabeta(new_board, depth - 1, alpha, beta, True )  # Recurse """,transpositon_table"""
+                if child_value < value:
+                    value = child_value
+                    best_move = move
+                beta = min(beta, value)
+                if alpha >= beta:
+                    break  # beta cutoff
 
-    best_move = None
-    if max_player:  # max player
-        value = float('-inf')
-        for move in board.get_all_legal_moves(board, color):
-            new_board = board.copy()  # make a copy to avoid modifying original board
-            new_board.apply_move(move)
-            child_value, _ = self.alphabeta(new_board, depth - 1, alpha, beta, False, transposition_table, color)  # Recurse
-            if child_value > value:
-                value = child_value
-                best_move = move
-            alpha = max(alpha, value)
-            if alpha >= beta:
-                break  # beta-Cutoff
-    else:  # min player
-        value = float('inf')
-        for move in board.get_all_legal_moves(board, color):
-            new_board = board.copy()
-            new_board.apply_move(move)
-            child_value, _ = self.alphabeta(new_board, depth - 1, alpha, beta, True, transposition_table, color)  # Recurse
-            if child_value < value:
-                value = child_value
-                best_move = move
-            beta = min(beta, value)
-            if alpha >= beta:
-                break  # Alpha-Cutoff
-
-    transposition_table[board_hash] = {"value": value, "depth": depth, "move": best_move}
-    return value, best_move  # Return both value and the best move
+        # transposition_table[board_hash] = {"value": value, "depth": depth, "move": best_move}
+        return value, best_move  # Return both value and the best move
         
 def main():
     board = Board()
@@ -643,6 +712,7 @@ def main():
             # Get next move from the current player
             if turn == blue_player:
                 # next_move = board.ask_for_move()
+                best_value, next_best_move = blue_player.alphabeta( 1, 100000, -100000, True) 
                 next_move = turn.get_random_move()
                 #next_move = turn.alphabeta(alpha=float('-inf'), beta=float('inf'), max_player=True, depth=0, max_depth=1)
             else:

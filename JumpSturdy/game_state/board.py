@@ -1,6 +1,7 @@
 from enum import Enum
 import os
 from random import choice
+import copy
 
 
 def there_is(bitboard, n):
@@ -233,6 +234,21 @@ class Board:
         self.RED_BLOCKED = 0b0000000000000000000000000000000000000000000000000000000000000000
         self.last_state = None
         self.actual_state = self.capture_state()
+        
+    def __copy__(self):
+        # Create a new instance of the class
+        new = self.__class__()  
+        # Copy the state of the board
+        new.BLUE_SINGLES = copy.copy(self.BLUE_SINGLES)
+        new.BLUE_DOUBLES = copy.copy(self.BLUE_DOUBLES)
+        new.BLUE_BLOCKED = copy.copy(self.BLUE_BLOCKED)
+        new.RED_SINGLES = copy.copy(self.RED_SINGLES)
+        new.RED_DOUBLES = copy.copy(self.RED_DOUBLES)
+        new.RED_BLOCKED = copy.copy(self.RED_BLOCKED)
+        new.last_state = copy.copy(self.last_state)
+        new.actual_state = copy.copy(self.actual_state)
+        return new
+        
 
     def fen_notation_into_bb(self, notation):
         # Auslesen der vorgegebenen String Notation vom Server in unsere BitBoards für Pieces
