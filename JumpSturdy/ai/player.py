@@ -3,7 +3,6 @@ import random
 import math
 import time
 from JumpSturdy.game_state.board import Board, Coordinate, Move
-from ai.alphabeta import alphabeta
 
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
@@ -188,6 +187,8 @@ def piece_density(singles_binary, doubles_binary):
             distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
             total_distance += distance
 
+    if len(positions) == 0:
+        return 0
     avg_distance = total_distance / len(positions)
 
     return avg_distance
@@ -222,10 +223,12 @@ def piece_on_indices(weights, friendly_type_binary, indices, type, friendly):
 
 def piece_in_front(weights, first_bitboard, type1, second_bitboard, type2):
     """Check if the second bitboard has a piece in front of the first bitboard."""
+    amount = 0
     for i in range(56):
         if first_bitboard[i] == '1' and second_bitboard[i + 8] == '1':
-            return weights[f"friendly_{type1}_value"] + weights[f"friendly_{type2}_value"]
-    return 0
+            amount += 1
+    return amount
+
 
 def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, enemy_doubles):
     # Find the furthest front/back friendly/enemy piece
@@ -258,7 +261,7 @@ def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, en
 
     # Check if any friendly piece is beyond the furthest enemy piece
     if friend > enemy:
-            return weights[f"friendly_{type}_value"] + friend
+        return weights[f"friendly_{type}_value"] + friend
     return 0
 
 
@@ -272,6 +275,124 @@ def normalize_weights(weights):
     return normalized_weights
 
 
+def alpha_beta(blue_player, red_player, board, depth, alpha, beta, maximizing_player):
+    if maximizing_player:
+        # blue_player.board.print_board()
+        # print(f"player: {blue_player.color}, score: {blue_player.get_score(blue_player.board)}")
+
+        if depth == 0 or "Game over" in board.is_game_over():
+            return blue_player.get_score(board), None
+
+        max_value = float('-inf')
+        max_move = None
+
+        # move_score_list = []
+        possible_moves = blue_player.board.get_legal_moves_moves(
+            board.get_legal_moves({'singles_left_empty': True,
+                                          'singles_front_empty': True,
+                                          'singles_right_empty': True,
+                                          'singles_kill_left_singles': True,
+                                          'singles_kill_left_doubles': True,
+                                          'singles_kill_right_singles': True,
+                                          'singles_kill_right_doubles': True,
+                                          'singles_upgrade_left': True,
+                                          'singles_upgrade_front': True,
+                                          'singles_upgrade_right': True,
+                                          'doubles_l_l_f_empty': True,
+                                               'doubles_f_f_l_empty': True,
+                                               'doubles_f_f_r_empty': True,
+                                               'doubles_r_r_f_empty': True,
+                                               'doubles_kill_l_l_f_singles': True,
+                                               'doubles_kill_l_l_f_doubles': True,
+                                          'doubles_kill_f_f_l_singles': True,
+                                          'doubles_kill_f_f_l_doubles': True,
+                                          'doubles_kill_f_f_r_singles': True,
+                                          'doubles_kill_f_f_r_doubles': True,
+                                          'doubles_kill_r_r_f_singles': True,
+                                          'doubles_kill_r_r_f_doubles': True,
+                                          'doubles_l_l_f_singles': True,
+                                          'doubles_f_f_l_singles': True,
+                                          'doubles_f_f_r_singles': True,
+                                          'doubles_r_r_f_singles': True
+                                               }, blue_player.color), blue_player.color)
+
+        for move in possible_moves:
+            # print(f"move: {move.from_.name}-{move.to.name}")
+            board.apply_move(move)
+            value, _ = alpha_beta(blue_player, red_player, board, depth - 1, alpha, beta, False)
+            # move_score_list.append((move, value))
+            blue_player.board.undo_move()
+            max_move = max_move if max_value >= value else move
+            max_value = max(max_value, value)
+            alpha = max(alpha, value)
+            if beta <= alpha:
+                break
+        # print("----------------")
+        # print("move_score_list")
+        # for move in move_score_list:
+        #     print(move[0])
+        #     print(move[1])
+        return max_value, max_move
+    else:
+        # red_player.board.print_board()
+        # print(f"player: {red_player.color}, score: {red_player.get_score(red_player.board)}")
+
+        if depth == 0 or "Game over" in red_player.board.is_game_over():
+            return red_player.get_score(board), None
+
+        min_value = float('inf')
+        min_move = None
+
+        # move_score_list = []
+        possible_moves = board.get_legal_moves_moves(
+            board.get_legal_moves({'singles_left_empty': True,
+                                          'singles_front_empty': True,
+                                          'singles_right_empty': True,
+                                          'singles_kill_left_singles': True,
+                                          'singles_kill_left_doubles': True,
+                                          'singles_kill_right_singles': True,
+                                          'singles_kill_right_doubles': True,
+                                          'singles_upgrade_left': True,
+                                          'singles_upgrade_front': True,
+                                          'singles_upgrade_right': True,
+                                          'doubles_l_l_f_empty': True,
+                                               'doubles_f_f_l_empty': True,
+                                               'doubles_f_f_r_empty': True,
+                                               'doubles_r_r_f_empty': True,
+                                               'doubles_kill_l_l_f_singles': True,
+                                               'doubles_kill_l_l_f_doubles': True,
+                                               'doubles_kill_f_f_l_singles': True,
+                                               'doubles_kill_f_f_l_doubles': True,
+                                               'doubles_kill_f_f_r_singles': True,
+                                               'doubles_kill_f_f_r_doubles': True,
+                                               'doubles_kill_r_r_f_singles': True,
+                                               'doubles_kill_r_r_f_doubles': True,
+                                               'doubles_l_l_f_singles': True,
+                                               'doubles_f_f_l_singles': True,
+                                               'doubles_f_f_r_singles': True,
+                                               'doubles_r_r_f_singles': True
+                                               }, red_player.color), red_player.color)
+
+        for move in possible_moves:
+            # print(f"move: {move.from_.name}-{move.to.name}")
+            response = red_player.board.apply_move(move)
+            value, _ = alpha_beta(blue_player, red_player, board, depth - 1, alpha, beta, True)
+            # move_score_list.append((move, value))
+            response = red_player.board.undo_move()
+            min_move = min_move if min_value < value else move
+            min_value = min(min_value, value)
+            beta = min(beta, value)
+            if beta <= alpha:
+                break
+
+        # print("----------------")
+        # print("move_score_list")
+        # for move in move_score_list:
+        #     print(move[0])
+        #     print(move[1])
+        return min_value, min_move
+
+
 class AIPlayer:
     def __init__(self, color, board):
         # Initialize AI components
@@ -282,43 +403,56 @@ class AIPlayer:
             "bias": 1,
             "friendly_singles_value": 1,
             "friendly_doubles_value": 3,
-            "friendly_material_score": 1,
+            "friendly_material_score": 2,
             "enemy_singles_value": -1,
             "enemy_doubles_value": -3,
-            "enemy_material_score": -1,
+            "enemy_material_score": -2,
 
             "friendly_most_advanced_singles": 1,
             "friendly_most_advanced_doubles": 1,
-            "enemy_most_advanced_singles": -3,
-            "enemy_most_advanced_doubles": -3,
-            "friendly_advancement_of_singles": 1,
-            "friendly_advancement_of_doubles": 1,
+            "enemy_most_advanced_singles": -1,
+            "enemy_most_advanced_doubles": -1,
+            "friendly_advancement_of_singles": 2,
+            "friendly_advancement_of_doubles": 2,
             "enemy_advancement_of_singles": -2,
-            "enemy_advancement_of_doubles": -1,
+            "enemy_advancement_of_doubles": -2,
 
-            "control_of_center": 1,
-            "control_of_edges": 3,
+            "control_of_center": 2,
+            "control_of_edges": 2,
 
             "friendly_single_in_edges": 3,
             "friendly_double_in_edges": 1,
             "friendly_single_in_center": 2,
             "friendly_double_in_center": 1,
             "enemy_single_in_edges": -3,
-            "enemy_double_in_edges": -2,
+            "enemy_double_in_edges": -1,
             "enemy_single_in_center": -2,
-            "enemy_double_in_center": -2,
+            "enemy_double_in_center": -1,
 
             "friendly_double_in_back_corner": -1,
             "friendly_doubles_in_line": 1,
             "friendly_single_double_in_line": 1,
             "friendly_singles_in_line": 1,
-            "friendly_piece_is_last": 7,
+            "friendly_piece_is_last": 20,
 
-            "friendly_density": 1,
+            "friendly_density": 3,
             "friendly_mobility": 1,
             "enemy_density": -1,
-            "enemy_mobility": -4
+            "enemy_mobility": -3
         }
+
+    def get_best_move(self, enemy, max_depth):
+        best_move = None
+        best_value = float('-inf')
+        for depth in range(1, max_depth + 1):
+            value, move = alpha_beta(self, enemy, self.board,  depth, float('-inf'), float('inf'), True)
+            # print("- - - - - - - - - - - - - - - - - -")
+            # print(f"move: {move}, value: {value}")
+            best_move = move
+            # print(f"best move: {move}, best value: {value}")
+            # print("- - - - - - - - - - - - - - - - - -")
+            # Check for time constraints here to break early
+        return best_move
 
     def get_random_move(self):
         posible_moves = self.board.get_legal_moves_list(self.board.get_legal_moves({'singles_left_empty': True,
@@ -351,30 +485,31 @@ class AIPlayer:
         random_index = random.randrange(0, len(posible_moves), 1)
         return posible_moves[random_index]
 
-    def get_score(self):
+    def get_score(self, board):
+        # board.print_board()
         game_over = self.board.is_game_over()
-        if game_over != "Game Over":
-            if f"{self.color} wins" in game_over:
-                return 1000
-            elif "Red wins" in game_over:
-                return - 1000
+        if game_over[0]:
+            if game_over[1] == f"{self.color}":
+                return float('inf')
+            else:
+                return float('-inf')
 
-        blue_singles_binary = bin(self.board.BLUE_SINGLES)[2:].zfill(64)
-        blue_doubles_binary = bin(self.board.BLUE_DOUBLES)[2:].zfill(64)
-        red_singles_binary = bin(self.board.RED_SINGLES)[2:].zfill(64)
-        red_doubles_binary = bin(self.board.RED_DOUBLES)[2:].zfill(64)
+        blue_singles_binary = bin(board.BLUE_SINGLES)[2:].zfill(64)
+        blue_doubles_binary = bin(board.BLUE_DOUBLES)[2:].zfill(64)
+        red_singles_binary = bin(board.RED_SINGLES)[2:].zfill(64)
+        red_doubles_binary = bin(board.RED_DOUBLES)[2:].zfill(64)
         edges_indices = [8, 16, 24, 32, 40, 48, 15, 23, 31, 39, 47, 55]
         center_indices = [18, 19, 20, 21, 26, 27, 28, 29, 34, 35, 36, 37, 42, 43, 44, 45]
         corner_indices = [1, 6]
 
         # Material score
-        friendly_singles_value = self.weights["friendly_singles_value"] * bin(self.board.BLUE_SINGLES).count('1')
-        friendly_doubles_value = self.weights["friendly_doubles_value"] * bin(self.board.BLUE_DOUBLES).count('1')
+        friendly_singles_value = self.weights["friendly_singles_value"] * bin(board.BLUE_SINGLES).count('1')
+        friendly_doubles_value = self.weights["friendly_doubles_value"] * bin(board.BLUE_DOUBLES).count('1')
         friendly_material_score = self.weights["friendly_material_score"] * (
                 friendly_singles_value + friendly_doubles_value)
-        enemy_singles_value = self.weights["enemy_singles_value"] * bin(self.board.RED_SINGLES).count('1')
-        enemy_doubles_value = self.weights["enemy_doubles_value"] * bin(self.board.RED_DOUBLES).count('1')
-        enemy_material_score = self.weights["enemy_material_score"] * (enemy_singles_value + enemy_doubles_value)
+        enemy_singles_value = self.weights["enemy_singles_value"] * bin(board.RED_SINGLES).count('1')
+        enemy_doubles_value = self.weights["enemy_doubles_value"] * bin(board.RED_DOUBLES).count('1')
+        enemy_material_score = self.weights["enemy_material_score"] * (enemy_singles_value + enemy_doubles_value) * (-1)
 
         # Advanced pieces
         friendly_most_advanced_singles = self.weights['friendly_most_advanced_singles'] * most_advanced_pieces(
@@ -549,34 +684,8 @@ class AIPlayer:
         #     'single_in_center': (self.weights['single_in_center'], single_in_center),
         #     'double_in_center': (self.weights['double_in_center'], double_in_center)
         # }
-
+        # print(f"Player:{self.color}, Score:{total_score}")
         return total_score
-
-    def alphabeta(self, alpha, beta, max_player, depth, max_depth):
-    #if depth == 0 or self.is_game_over() != "Game not over":
-        game_over = self.baord.is_game_over()
-        if game_over == False or depth == 0:
-            return self.get_score()
-
-        if max_player:
-            value = -float('inf')
-            # get children of game-tree
-            for move in self.get_legal_moves(["Singles", "Doubles"], "Blue").values():
-                value = max(value, move.alphabeta(alpha, beta, False, depth + 1, max_depth))
-                alpha = max(alpha, value)
-                # beta cutof because beta value is too low to continue searching
-                if alpha >= beta:
-                    break  
-            return value
-        else:
-            value = float('inf')
-            for move in self.get_legal_moves(["Singles", "Doubles"], "Red").values():
-                value = min(value, move.alphabeta(alpha, beta, True, depth + 1, max_depth))
-                beta = min(beta, value)
-                # alpha cutoff
-                if beta <= alpha:
-                    break  
-            return value
 
 
 def main():
@@ -584,7 +693,6 @@ def main():
     board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
     blue_player = AIPlayer("Blue", board)
     red_player = AIPlayer("Red", board)
-    # blue_player.alphabeta(alpha="-inf", beta="inf", max_player = 1, depth = 0, max_depth=1)
 
     # Value-Iteration (didn't work)
     # new_weights = value_iteration(blue_player, red_player, board)
@@ -593,6 +701,7 @@ def main():
     i = 0
     N = 1
     total = 0
+    winner = 0
 
     # Loop through each game iteration
     for j in range(N):
@@ -607,14 +716,14 @@ def main():
             # Print the current game state
             board.print_board()
             print("-----------------------")
-            print(f"Blue score: {blue_player.get_score()}")
-            print(f"Red score: {red_player.get_score()}")
-            print(f"Actual player score: {turn.get_score()}")
+            print(f"Blue score: {blue_player.get_score(board)}")
+            print(f"Red score: {red_player.get_score(board)}")
+            print(f"Actual player score: {turn.get_score(turn.board)}")
 
             # Check if the game is over
             game_over = board.is_game_over()
-            if game_over != "Game not over":
-                print(board.is_game_over())
+            if game_over[0]:
+                print(f"game over, {game_over[1]} wins")
                 break
 
             print("-----------------------")
@@ -623,15 +732,16 @@ def main():
             # Get next move from the current player
             if turn == blue_player:
                 # next_move = board.ask_for_move()
-                next_move = turn.get_random_move()
+                next_move = turn.get_best_move(red_player, 2)
+                move = next_move
             else:
                 next_move = turn.get_random_move()
+                from_square, to_square = next_move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+                move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
 
             # Apply move
-            from_square, to_square = next_move.upper().split('-')
-            from_coordinate = Coordinate[from_square]
-            to_coordinate = Coordinate[to_square]
-            move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
             response = board.apply_move(move)
             print("-----------------------")
             print(next_move)
@@ -646,6 +756,8 @@ def main():
         print(f"------- TIEFE: {i} -------")
         total += i
         i = 0
+
+        winner += 1 if "Blue wins" in board.is_game_over() else 0
 
         board.reset()
 
