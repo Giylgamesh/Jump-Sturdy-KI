@@ -699,7 +699,7 @@ def main():
 
     # Initialize loop control variables
     i = 0
-    N = 1
+    N = 2
     total = 0
     winner = 0
 
