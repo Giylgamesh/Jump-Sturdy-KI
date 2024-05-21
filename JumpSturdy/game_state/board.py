@@ -746,18 +746,18 @@ class Board:
 
         # Check if BLUE or RED have reached the opposite side
         if self.BLUE_SINGLES & Board.FIRST_6_SQUARES_MASK:
-            return "Game over: Blue wins"
+            return True, "Blue"
         elif self.RED_SINGLES & Board.LAST_6_SQUARES_MASK:
-            return "Game over: Red wins"
+            return True, "Red"
 
         # Check if all BLUE or RED pieces are blocked or captured
         if self.BLUE_SINGLES == 0 and self.BLUE_DOUBLES == 0:
-            return "Game over: Red wins"
+            return True, "Red"
         elif self.RED_SINGLES == 0 and self.RED_DOUBLES == 0:
-            return "Game over: Blue wins"
+            return True, "Blue"
 
         # No end-game conditions met
-        return "Game not over"
+        return False, None
 
     def parse_to_coordinate_to_move(self, to_coordinates, shift):
         # This function should return the "from-to" string based on the to_position and the shift
@@ -895,6 +895,19 @@ class Board:
             legal_moves_array.extend(moves)
         return legal_moves_array
 
+    def get_legal_moves_moves(self, selected_legal_moves, player):
+        legal_moves_list = self.get_legal_moves_list(selected_legal_moves)
+        new_legal_moves_list = []
+
+        for move in legal_moves_list:
+            from_square, to_square = move.upper().split('-')
+            from_coordinate = Coordinate[from_square]
+            to_coordinate = Coordinate[to_square]
+            move = Move(player, from_coordinate, to_coordinate)
+            new_legal_moves_list.append(move)
+
+        return new_legal_moves_list
+
     def select_random_move(self, selected_legal_moves):
         # Get a random move from the selected legal moves
         non_empty_categories = {category: moves for category, moves in selected_legal_moves.items() if moves}
@@ -920,8 +933,8 @@ class Board:
 
     def copy_board(self):
         board_copy = Board
-    
-    
+
+
 
 class Move:
     def __init__(self, player, fromm, to):
@@ -940,6 +953,9 @@ class Move:
 
     def __hash__(self):
         return hash((self.player, self.from_, self.to))
+
+    def __str__(self):
+        return f'{self.player}: {self.from_.name}-{self.to.name}'
 
 
 class Coordinate(Enum):
