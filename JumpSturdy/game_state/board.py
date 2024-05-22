@@ -420,9 +420,10 @@ class Board:
             elif there_is(self.BLUE_DOUBLES, move.from_):
                 # to left-left-front or front-front-left or to front-front-right or right-right-front
                 if move.to.value == move.from_.value + 6 or move.to.value == move.from_.value + 15 or move.to.value == move.from_.value + 17 or move.to.value == move.from_.value + 10:
-                    # there is blue single
+                    # -------------------- Maybe bug ----------------------------------------------------------------------------------------------------------------------------------------------------------
                     copy = self.last_state
                     self.last_state = self.capture_state()
+                    # there is blue single
                     if there_is(self.BLUE_SINGLES, move.to):
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
@@ -465,7 +466,6 @@ class Board:
                             return "Error: Missing blocked piece"
                     # there is red double
                     elif there_is(self.RED_DOUBLES, move.to):
-                        self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.to)
                         self.BLUE_DOUBLES = add_nth_bit(self.BLUE_DOUBLES, move.to)
@@ -482,22 +482,27 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Double killing move"
                         else:
-                            self.last_state = self.last_state.last_state.copy()
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is blue double
                     elif there_is(self.BLUE_DOUBLES, move.to):
+                        self.last_state = copy
                         return "Error: Invalid move"
                     # there is nothing
                     else:
                         if move.to.value == move.from_.value + 6 and move.to.value in [15, 16, 23, 24, 31, 32, 39, 40,
                                                                                        47, 48, 55, 56]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value + 10 and move.to.value in [9, 10, 17, 18, 25, 26, 33, 34,
                                                                                           41, 42, 49, 50]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value + 15 and move.to.value in [16, 24, 32, 40, 48, 56]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value + 17 and move.to.value in [9, 17, 25, 33, 41, 49, ]:
+                            self.last_state = copy
                             return "Error: Invalid move"
 
                         # copy = self.last_state
@@ -604,9 +609,11 @@ class Board:
             elif there_is(self.RED_DOUBLES, move.from_):
                 # left-left-front or front-front-left or to front-front-right or right-right-front
                 if move.to.value == move.from_.value - 6 or move.to.value == move.from_.value - 15 or move.to.value == move.from_.value - 17 or move.to.value == move.from_.value - 10:
+                    # -------------------- Maybe bug ----------------------------------------------------------------------------------------------------------------------------------------------------------
+                    copy = self.last_state
+                    self.last_state = self.capture_state()
                     # there is blue single
                     if there_is(self.BLUE_SINGLES, move.to):
-                        self.last_state = self.capture_state()
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.BLUE_SINGLES = clear_nth_bit(self.BLUE_SINGLES, move.to)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
@@ -623,10 +630,10 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Killing move"
                         else:
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is red single
                     elif there_is(self.RED_SINGLES, move.to):
-                        self.last_state = self.capture_state()
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.RED_SINGLES = clear_nth_bit(self.RED_SINGLES, move.to)
                         self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
@@ -644,10 +651,10 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Change of double"
                         else:
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is blue double
                     elif there_is(self.BLUE_DOUBLES, move.to):
-                        self.last_state = self.capture_state()
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.to)
                         self.RED_DOUBLES = add_nth_bit(self.RED_DOUBLES, move.to)
@@ -664,24 +671,30 @@ class Board:
                             self.actual_state = self.capture_state()
                             return "Double killing move"
                         else:
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                     # there is red double
                     elif there_is(self.RED_DOUBLES, move.to):
+                        self.last_state = copy
                         return "Error: Invalid move"
                     # there is nothing
                     else:
                         if move.to.value == move.from_.value - 6 and move.to.value in [9, 10, 17, 18, 25, 26, 33, 34,
                                                                                        41, 42, 49, 50]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value - 10 and move.to.value in [15, 16, 23, 24, 31, 32, 39,
                                                                                           40, 47, 48, 55, 56]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value - 15 and move.to.value in [9, 17, 25, 33, 41, 49]:
+                            self.last_state = copy
                             return "Error: Invalid move"
                         elif move.to.value == move.from_.value - 17 and move.to.value in [16, 24, 32, 40, 48, 56]:
+                            self.last_state = copy
                             return "Error: Invalid move"
 
-                        self.last_state = self.capture_state()
+                        # self.last_state = self.capture_state()
                         self.RED_DOUBLES = clear_nth_bit(self.RED_DOUBLES, move.from_)
                         self.RED_SINGLES = add_nth_bit(self.RED_SINGLES, move.to)
                         # on top of blue blocked
@@ -711,6 +724,7 @@ class Board:
                             else:
                                 return "right-right-front move"
                         else:
+                            self.last_state = copy
                             return "Error: Missing blocked piece"
                 # to somewhere else
                 else:
