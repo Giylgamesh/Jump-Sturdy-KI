@@ -500,8 +500,8 @@ class Board:
                         elif move.to.value == move.from_.value + 17 and move.to.value in [9, 17, 25, 33, 41, 49, ]:
                             return "Error: Invalid move"
 
-                        copy = self.last_state
-                        self.last_state = self.capture_state()
+                        # copy = self.last_state
+                        # self.last_state = self.capture_state()
                         self.BLUE_DOUBLES = clear_nth_bit(self.BLUE_DOUBLES, move.from_)
                         self.BLUE_SINGLES = add_nth_bit(self.BLUE_SINGLES, move.to)
                         # on top of blue blocked
@@ -932,7 +932,16 @@ class Board:
         return next_move
 
     def copy_board(self):
-        board_copy = Board
+        new_board = Board()
+        new_board.BLUE_SINGLES = self.BLUE_SINGLES
+        new_board.BLUE_DOUBLES = self.BLUE_DOUBLES
+        new_board.BLUE_BLOCKED = self.BLUE_BLOCKED
+        new_board.RED_SINGLES = self.RED_SINGLES
+        new_board.RED_DOUBLES = self.RED_DOUBLES
+        new_board.RED_BLOCKED = self.RED_BLOCKED
+        new_board.last_state = self.last_state
+        new_board.actual_state = self.actual_state
+        return new_board
 
 
 

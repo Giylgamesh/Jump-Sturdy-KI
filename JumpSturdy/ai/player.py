@@ -2,6 +2,7 @@ import os
 import random
 import math
 import time
+from collections import deque
 from JumpSturdy.game_state.board import Board, Coordinate, Move
 
 
@@ -265,6 +266,28 @@ def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, en
     return 0
 
 
+def piece_under_attack(weights, friend_pieces, enemy_singles, enemy_doubles):
+    """Calculate how many friendly pieces are under attack."""
+    amount = 0
+    for i in range(64):  # Adjusted to include the entire 64 bits
+        if friend_pieces[i] == '1':  # Check if there's a friendly piece at position i
+            # Check for single-piece attacks
+            if i + 7 < 64 and enemy_singles[i + 7] == '1':
+                amount += 1
+            if i + 9 < 64 and enemy_singles[i + 9] == '1':
+                amount += 1
+            # Check for double-piece attacks
+            if i + 6 < 64 and enemy_doubles[i + 6] == '1':
+                amount += 1
+            if i + 10 < 64 and enemy_doubles[i + 10] == '1':
+                amount += 1
+            if i + 15 < 64 and enemy_doubles[i + 15] == '1':
+                amount += 1
+            if i + 17 < 64 and enemy_doubles[i + 17] == '1':
+                amount += 1
+    return amount
+
+
 def normalize_weights(weights):
     return weights
     total = sum(weights.values())
@@ -273,124 +296,6 @@ def normalize_weights(weights):
     else:
         normalized_weights = weights
     return normalized_weights
-
-
-def alpha_beta(blue_player, red_player, board, depth, alpha, beta, maximizing_player):
-    if maximizing_player:
-        # blue_player.board.print_board()
-        # print(f"player: {blue_player.color}, score: {blue_player.get_score(blue_player.board)}")
-
-        if depth == 0 or "Game over" in board.is_game_over():
-            return blue_player.get_score(board), None
-
-        max_value = float('-inf')
-        max_move = None
-
-        # move_score_list = []
-        possible_moves = blue_player.board.get_legal_moves_moves(
-            board.get_legal_moves({'singles_left_empty': True,
-                                          'singles_front_empty': True,
-                                          'singles_right_empty': True,
-                                          'singles_kill_left_singles': True,
-                                          'singles_kill_left_doubles': True,
-                                          'singles_kill_right_singles': True,
-                                          'singles_kill_right_doubles': True,
-                                          'singles_upgrade_left': True,
-                                          'singles_upgrade_front': True,
-                                          'singles_upgrade_right': True,
-                                          'doubles_l_l_f_empty': True,
-                                               'doubles_f_f_l_empty': True,
-                                               'doubles_f_f_r_empty': True,
-                                               'doubles_r_r_f_empty': True,
-                                               'doubles_kill_l_l_f_singles': True,
-                                               'doubles_kill_l_l_f_doubles': True,
-                                          'doubles_kill_f_f_l_singles': True,
-                                          'doubles_kill_f_f_l_doubles': True,
-                                          'doubles_kill_f_f_r_singles': True,
-                                          'doubles_kill_f_f_r_doubles': True,
-                                          'doubles_kill_r_r_f_singles': True,
-                                          'doubles_kill_r_r_f_doubles': True,
-                                          'doubles_l_l_f_singles': True,
-                                          'doubles_f_f_l_singles': True,
-                                          'doubles_f_f_r_singles': True,
-                                          'doubles_r_r_f_singles': True
-                                               }, blue_player.color), blue_player.color)
-
-        for move in possible_moves:
-            # print(f"move: {move.from_.name}-{move.to.name}")
-            board.apply_move(move)
-            value, _ = alpha_beta(blue_player, red_player, board, depth - 1, alpha, beta, False)
-            # move_score_list.append((move, value))
-            blue_player.board.undo_move()
-            max_move = max_move if max_value >= value else move
-            max_value = max(max_value, value)
-            alpha = max(alpha, value)
-            if beta <= alpha:
-                break
-        # print("----------------")
-        # print("move_score_list")
-        # for move in move_score_list:
-        #     print(move[0])
-        #     print(move[1])
-        return max_value, max_move
-    else:
-        # red_player.board.print_board()
-        # print(f"player: {red_player.color}, score: {red_player.get_score(red_player.board)}")
-
-        if depth == 0 or "Game over" in red_player.board.is_game_over():
-            return red_player.get_score(board), None
-
-        min_value = float('inf')
-        min_move = None
-
-        # move_score_list = []
-        possible_moves = board.get_legal_moves_moves(
-            board.get_legal_moves({'singles_left_empty': True,
-                                          'singles_front_empty': True,
-                                          'singles_right_empty': True,
-                                          'singles_kill_left_singles': True,
-                                          'singles_kill_left_doubles': True,
-                                          'singles_kill_right_singles': True,
-                                          'singles_kill_right_doubles': True,
-                                          'singles_upgrade_left': True,
-                                          'singles_upgrade_front': True,
-                                          'singles_upgrade_right': True,
-                                          'doubles_l_l_f_empty': True,
-                                               'doubles_f_f_l_empty': True,
-                                               'doubles_f_f_r_empty': True,
-                                               'doubles_r_r_f_empty': True,
-                                               'doubles_kill_l_l_f_singles': True,
-                                               'doubles_kill_l_l_f_doubles': True,
-                                               'doubles_kill_f_f_l_singles': True,
-                                               'doubles_kill_f_f_l_doubles': True,
-                                               'doubles_kill_f_f_r_singles': True,
-                                               'doubles_kill_f_f_r_doubles': True,
-                                               'doubles_kill_r_r_f_singles': True,
-                                               'doubles_kill_r_r_f_doubles': True,
-                                               'doubles_l_l_f_singles': True,
-                                               'doubles_f_f_l_singles': True,
-                                               'doubles_f_f_r_singles': True,
-                                               'doubles_r_r_f_singles': True
-                                               }, red_player.color), red_player.color)
-
-        for move in possible_moves:
-            # print(f"move: {move.from_.name}-{move.to.name}")
-            response = red_player.board.apply_move(move)
-            value, _ = alpha_beta(blue_player, red_player, board, depth - 1, alpha, beta, True)
-            # move_score_list.append((move, value))
-            response = red_player.board.undo_move()
-            min_move = min_move if min_value < value else move
-            min_value = min(min_value, value)
-            beta = min(beta, value)
-            if beta <= alpha:
-                break
-
-        # print("----------------")
-        # print("move_score_list")
-        # for move in move_score_list:
-        #     print(move[0])
-        #     print(move[1])
-        return min_value, min_move
 
 
 class AIPlayer:
@@ -409,11 +314,11 @@ class AIPlayer:
             "enemy_material_score": -2,
 
             "friendly_most_advanced_singles": 1,
-            "friendly_most_advanced_doubles": 1,
-            "enemy_most_advanced_singles": -1,
-            "enemy_most_advanced_doubles": -1,
-            "friendly_advancement_of_singles": 2,
-            "friendly_advancement_of_doubles": 2,
+            "friendly_most_advanced_doubles": 2,
+            "enemy_most_advanced_singles": -2,
+            "enemy_most_advanced_doubles": -2,
+            "friendly_advancement_of_singles": 5,
+            "friendly_advancement_of_doubles": 5,
             "enemy_advancement_of_singles": -2,
             "enemy_advancement_of_doubles": -2,
 
@@ -423,35 +328,106 @@ class AIPlayer:
             "friendly_single_in_edges": 3,
             "friendly_double_in_edges": 1,
             "friendly_single_in_center": 2,
-            "friendly_double_in_center": 1,
+            "friendly_double_in_center": 2,
             "enemy_single_in_edges": -3,
             "enemy_double_in_edges": -1,
             "enemy_single_in_center": -2,
             "enemy_double_in_center": -1,
 
             "friendly_double_in_back_corner": -1,
-            "friendly_doubles_in_line": 1,
-            "friendly_single_double_in_line": 1,
+            "friendly_doubles_in_line": 4,
+            "friendly_single_double_in_line": 5,
             "friendly_singles_in_line": 1,
             "friendly_piece_is_last": 20,
 
             "friendly_density": 3,
             "friendly_mobility": 1,
             "enemy_density": -1,
-            "enemy_mobility": -3
+            "enemy_mobility": -3,
+
+            "friendly_single_under_attack": -4,
+            "friendly_double_under_attack": -4
         }
 
-    def get_best_move(self, enemy, max_depth):
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, temp):
+        # board.print_board()
+        # if temp:
+        #     board.print_board()
+
+        if board.is_game_over()[0]:
+            return float('-inf') if maximizing_player else float('inf'), None
+
+        if depth == 0:
+            return self.get_score(board), None
+
+        best_value = float('-inf') if maximizing_player else float('inf')
+        best_move = None
+
+        color = "Blue" if maximizing_player else "Red"
+        possible_moves = board.get_legal_moves_moves(
+            board.get_legal_moves({'singles_left_empty': True,  'singles_front_empty': True,
+                                   'singles_right_empty': True, 'singles_kill_left_singles': True,
+                                   'singles_kill_left_doubles': True,   'singles_kill_right_singles': True,
+                                   'singles_kill_right_doubles': True,  'singles_upgrade_left': True,
+                                   'singles_upgrade_front': True,   'singles_upgrade_right': True,
+                                   'doubles_l_l_f_empty': True, 'doubles_f_f_l_empty': True,
+                                   'doubles_f_f_r_empty': True, 'doubles_r_r_f_empty': True,
+                                   'doubles_kill_l_l_f_singles': True,  'doubles_kill_l_l_f_doubles': True,
+                                   'doubles_kill_f_f_l_singles': True,  'doubles_kill_f_f_l_doubles': True,
+                                   'doubles_kill_f_f_r_singles': True,  'doubles_kill_f_f_r_doubles': True,
+                                   'doubles_kill_r_r_f_singles': True,  'doubles_kill_r_r_f_doubles': True,
+                                   'doubles_l_l_f_singles': True,   'doubles_f_f_l_singles': True,
+                                   'doubles_f_f_r_singles': True,   'doubles_r_r_f_singles': True
+                                   }, color), color)
+
+        # move_score_list = []
+        for move in possible_moves:
+            # if temp and depth > 2:
+            #     if len(move_score_list) > 7:
+            #         print("BBPP")
+            #     print("BP")
+            #     board.print_board()
+            assert "Error" not in board.apply_move(move)
+            value, _ = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, temp)
+            # move_score_list.append((move, value))
+            # if temp and depth > 2:
+            #     if len(move_score_list) > 7:
+            #         print("BBPP")
+            #     print("BP")
+            #     board.print_board()
+            assert "Good" in board.undo_move()
+
+            if maximizing_player:
+                if value > best_value:
+                    best_value, best_move = value, move
+                alpha = max(alpha, value)
+                if beta <= alpha:
+                    break
+            else:
+                if value < best_value:
+                    best_value, best_move = value, move
+                beta = min(beta, value)
+                if beta <= alpha:
+                    break
+
+        return best_value, best_move
+
+    def get_best_move(self, max_depth):
         best_move = None
         best_value = float('-inf')
+        temp = False
         for depth in range(1, max_depth + 1):
-            value, move = alpha_beta(self, enemy, self.board,  depth, float('-inf'), float('inf'), True)
+            board_copy = self.board.copy_board()
+            if depth > 2:
+                temp = True
+            value, move = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), True, temp)
             # print("- - - - - - - - - - - - - - - - - -")
             # print(f"move: {move}, value: {value}")
             best_move = move
             # print(f"best move: {move}, best value: {value}")
             # print("- - - - - - - - - - - - - - - - - -")
             # Check for time constraints here to break early
+        assert best_move is not None
         return best_move
 
     def get_random_move(self):
@@ -483,32 +459,31 @@ class AIPlayer:
                                                                                     'doubles_r_r_f_singles': True
                                                                                     }, self.color))
         random_index = random.randrange(0, len(posible_moves), 1)
-        return posible_moves[random_index]
+        next_move = posible_moves[random_index]
+        from_square, to_square = next_move.upper().split('-')
+        from_coordinate = Coordinate[from_square]
+        to_coordinate = Coordinate[to_square]
+        move = Move(player=self.color, fromm=from_coordinate, to=to_coordinate)
+        return move
 
     def get_score(self, board):
         # board.print_board()
-        game_over = self.board.is_game_over()
-        if game_over[0]:
-            if game_over[1] == f"{self.color}":
-                return float('inf')
-            else:
-                return float('-inf')
-
         blue_singles_binary = bin(board.BLUE_SINGLES)[2:].zfill(64)
         blue_doubles_binary = bin(board.BLUE_DOUBLES)[2:].zfill(64)
         red_singles_binary = bin(board.RED_SINGLES)[2:].zfill(64)
         red_doubles_binary = bin(board.RED_DOUBLES)[2:].zfill(64)
+
         edges_indices = [8, 16, 24, 32, 40, 48, 15, 23, 31, 39, 47, 55]
         center_indices = [18, 19, 20, 21, 26, 27, 28, 29, 34, 35, 36, 37, 42, 43, 44, 45]
         corner_indices = [1, 6]
 
         # Material score
-        friendly_singles_value = self.weights["friendly_singles_value"] * bin(board.BLUE_SINGLES).count('1')
-        friendly_doubles_value = self.weights["friendly_doubles_value"] * bin(board.BLUE_DOUBLES).count('1')
+        friendly_singles_value = self.weights["friendly_singles_value"] * blue_singles_binary.count('1')
+        friendly_doubles_value = self.weights["friendly_doubles_value"] * blue_doubles_binary.count('1')
         friendly_material_score = self.weights["friendly_material_score"] * (
                 friendly_singles_value + friendly_doubles_value)
-        enemy_singles_value = self.weights["enemy_singles_value"] * bin(board.RED_SINGLES).count('1')
-        enemy_doubles_value = self.weights["enemy_doubles_value"] * bin(board.RED_DOUBLES).count('1')
+        enemy_singles_value = self.weights["enemy_singles_value"] * red_singles_binary.count('1')
+        enemy_doubles_value = self.weights["enemy_doubles_value"] * red_doubles_binary.count('1')
         enemy_material_score = self.weights["enemy_material_score"] * (enemy_singles_value + enemy_doubles_value) * (-1)
 
         # Advanced pieces
@@ -531,88 +506,98 @@ class AIPlayer:
             red_doubles_binary, friendly=False)
 
         # Control over the board
-        control_of_center = self.weights["control_of_center"] * control_of_indices(self.weights, blue_singles_binary,
-                                                                                   blue_doubles_binary,
-                                                                                   red_singles_binary,
-                                                                                   red_doubles_binary,
-                                                                                   center_indices)
-        control_of_edges = self.weights["control_of_edges"] * control_of_indices(self.weights, blue_singles_binary,
-                                                                                 blue_doubles_binary,
-                                                                                 red_singles_binary,
-                                                                                 red_doubles_binary,
-                                                                                 edges_indices)
-        friendly_density = self.weights["friendly_density"] * piece_density(blue_singles_binary, blue_doubles_binary)
-        friendly_mobility = self.weights["friendly_mobility"] * len(
-            self.board.get_legal_moves_list(self.board.get_all_legal_moves(self.color)))
-        enemy_density = self.weights["enemy_density"] * piece_density(red_singles_binary, red_doubles_binary)
-        if self.color == "Blue":
-            enemy_mobility = self.weights["enemy_mobility"] * len(
-                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Red")))
-        else:
-            enemy_mobility = self.weights["enemy_mobility"] * len(
-                self.board.get_legal_moves_list(self.board.get_all_legal_moves("Blue")))
+        # control_of_center = self.weights["control_of_center"] * control_of_indices(self.weights, blue_singles_binary,
+        #                                                                            blue_doubles_binary,
+        #                                                                            red_singles_binary,
+        #                                                                            red_doubles_binary,
+        #                                                                            center_indices)
+        # control_of_edges = self.weights["control_of_edges"] * control_of_indices(self.weights, blue_singles_binary,
+        #                                                                          blue_doubles_binary,
+        #                                                                          red_singles_binary,
+        #                                                                          red_doubles_binary,
+        #                                                                          edges_indices)
+        # friendly_density = self.weights["friendly_density"] * piece_density(blue_singles_binary, blue_doubles_binary)
+        # friendly_mobility = self.weights["friendly_mobility"] * len(
+        #     self.board.get_legal_moves_list(self.board.get_all_legal_moves(self.color)))
+        # enemy_density = self.weights["enemy_density"] * piece_density(red_singles_binary, red_doubles_binary)
+        # if self.color == "Blue":
+        #     enemy_mobility = self.weights["enemy_mobility"] * len(
+        #         self.board.get_legal_moves_list(self.board.get_all_legal_moves("Red")))
+        # else:
+        #     enemy_mobility = self.weights["enemy_mobility"] * len(
+        #         self.board.get_legal_moves_list(self.board.get_all_legal_moves("Blue")))
 
         # Strategic positions
-        friendly_single_in_edges = self.weights["friendly_single_in_edges"] * piece_on_indices(self.weights,
-                                                                                               blue_singles_binary,
-                                                                                               edges_indices, "singles",
-                                                                                               True)
-        enemy_single_in_edges = self.weights["enemy_single_in_edges"] * piece_on_indices(self.weights,
-                                                                                         red_singles_binary,
-                                                                                         edges_indices, "singles",
-                                                                                         False)
-        friendly_double_in_edges = self.weights["friendly_double_in_edges"] * piece_on_indices(self.weights,
-                                                                                               blue_doubles_binary,
-                                                                                               edges_indices, "doubles",
-                                                                                               True)
-        enemy_double_in_edges = self.weights["enemy_double_in_edges"] * piece_on_indices(self.weights,
-                                                                                         red_doubles_binary,
-                                                                                         edges_indices, "doubles",
-                                                                                         False)
-        friendly_single_in_center = self.weights["friendly_single_in_center"] * piece_on_indices(self.weights,
-                                                                                                 blue_singles_binary,
-                                                                                                 center_indices,
-                                                                                                 "singles", True)
-        enemy_single_in_center = self.weights["enemy_single_in_center"] * piece_on_indices(self.weights,
-                                                                                           red_singles_binary,
-                                                                                           center_indices, "singles",
-                                                                                           False)
+        # friendly_single_in_edges = self.weights["friendly_single_in_edges"] * piece_on_indices(self.weights,
+        #                                                                                        blue_singles_binary,
+        #                                                                                        edges_indices, "singles",
+        #                                                                                        True)
+        # enemy_single_in_edges = self.weights["enemy_single_in_edges"] * piece_on_indices(self.weights,
+        #                                                                                  red_singles_binary,
+        #                                                                                  edges_indices, "singles",
+        #                                                                                  False)
+        # friendly_double_in_edges = self.weights["friendly_double_in_edges"] * piece_on_indices(self.weights,
+        #                                                                                        blue_doubles_binary,
+        #                                                                                        edges_indices, "doubles",
+        #                                                                                        True)
+        # enemy_double_in_edges = self.weights["enemy_double_in_edges"] * piece_on_indices(self.weights,
+        #                                                                                  red_doubles_binary,
+        #                                                                                  edges_indices, "doubles",
+        #                                                                                  False)
+        # friendly_single_in_center = self.weights["friendly_single_in_center"] * piece_on_indices(self.weights,
+        #                                                                                          blue_singles_binary,
+        #                                                                                          center_indices,
+        #                                                                                          "singles", True)
+        # enemy_single_in_center = self.weights["enemy_single_in_center"] * piece_on_indices(self.weights,
+        #                                                                                    red_singles_binary,
+        #                                                                                    center_indices, "singles",
+        #                                                                                    False)
+        #
+        # friendly_double_in_center = self.weights["friendly_double_in_center"] * piece_on_indices(self.weights,
+        #                                                                                          blue_doubles_binary,
+        #                                                                                          center_indices,
+        #                                                                                          "doubles", True)
+        # enemy_double_in_center = self.weights["enemy_double_in_center"] * piece_on_indices(self.weights,
+        #                                                                                    red_doubles_binary,
+        #                                                                                    center_indices, "doubles",
+        #                                                                                    False)
+        #
+        # # Other cases
+        # friendly_double_in_back_corner = self.weights["friendly_double_in_back_corner"] * piece_on_indices(self.weights,
+        #                                                                                                    blue_doubles_binary,
+        #                                                                                                    corner_indices,
+        #                                                                                                    "doubles",
+        #                                                                                                    True)
+        # friendly_doubles_in_line = self.weights["friendly_doubles_in_line"] * piece_in_front(self.weights,
+        #                                                                                      blue_doubles_binary,
+        #                                                                                      "doubles",
+        #                                                                                      blue_doubles_binary,
+        #                                                                                      "doubles")
+        # friendly_single_double_in_line = self.weights["friendly_single_double_in_line"] * piece_in_front(self.weights,
+        #                                                                                                  blue_singles_binary,
+        #                                                                                                  "singles",
+        #                                                                                                  blue_doubles_binary,
+        #                                                                                                  "doubles")
+        # friendly_singles_in_line = self.weights["friendly_singles_in_line"] * piece_in_front(self.weights,
+        #                                                                                      blue_singles_binary,
+        #                                                                                      "singles",
+        #                                                                                      blue_singles_binary,
+        #                                                                                      "singles")
+        # friendly_piece_is_last = self.weights["friendly_piece_is_last"] * piece_is_last(self.weights,
+        #                                                                                 blue_singles_binary,
+        #                                                                                 blue_doubles_binary,
+        #                                                                                 red_singles_binary,
+        #                                                                                 red_doubles_binary)
 
-        friendly_double_in_center = self.weights["friendly_double_in_center"] * piece_on_indices(self.weights,
-                                                                                                 blue_doubles_binary,
-                                                                                                 center_indices,
-                                                                                                 "doubles", True)
-        enemy_double_in_center = self.weights["enemy_double_in_center"] * piece_on_indices(self.weights,
-                                                                                           red_doubles_binary,
-                                                                                           center_indices, "doubles",
-                                                                                           False)
-
-        # Other cases
-        friendly_double_in_back_corner = self.weights["friendly_double_in_back_corner"] * piece_on_indices(self.weights,
-                                                                                                           blue_doubles_binary,
-                                                                                                           corner_indices,
-                                                                                                           "doubles",
-                                                                                                           True)
-        friendly_doubles_in_line = self.weights["friendly_doubles_in_line"] * piece_in_front(self.weights,
-                                                                                             blue_doubles_binary,
-                                                                                             "doubles",
-                                                                                             blue_doubles_binary,
-                                                                                             "doubles")
-        friendly_single_double_in_line = self.weights["friendly_single_double_in_line"] * piece_in_front(self.weights,
+        # Under-Attack
+        friendly_single_under_attack = self.weights["friendly_single_under_attack"] * piece_under_attack(self.weights,
                                                                                                          blue_singles_binary,
-                                                                                                         "singles",
+                                                                                                         red_singles_binary,
+                                                                                                         red_doubles_binary)
+        friendly_double_under_attack = self.weights["friendly_double_under_attack"] * piece_under_attack(self.weights,
                                                                                                          blue_doubles_binary,
-                                                                                                         "doubles")
-        friendly_singles_in_line = self.weights["friendly_singles_in_line"] * piece_in_front(self.weights,
-                                                                                             blue_singles_binary,
-                                                                                             "singles",
-                                                                                             blue_singles_binary,
-                                                                                             "singles")
-        friendly_piece_is_last = self.weights["friendly_piece_is_last"] * piece_is_last(self.weights,
-                                                                                        blue_singles_binary,
-                                                                                        blue_doubles_binary,
-                                                                                        red_singles_binary,
-                                                                                        red_doubles_binary)
+                                                                                                         red_singles_binary,
+                                                                                                         red_doubles_binary)
 
         bias = self.weights["bias"] * 0
 
@@ -631,25 +616,27 @@ class AIPlayer:
                        friendly_advancement_of_doubles +
                        enemy_advancement_of_singles +
                        enemy_advancement_of_doubles +
-                       control_of_center +
-                       control_of_edges +
-                       friendly_density +
-                       friendly_mobility +
-                       enemy_density +
-                       enemy_mobility +
-                       friendly_single_in_edges +
-                       friendly_double_in_edges +
-                       friendly_single_in_center +
-                       friendly_double_in_center +
-                       enemy_single_in_edges +
-                       enemy_double_in_edges +
-                       enemy_single_in_center +
-                       enemy_double_in_center +
-                       friendly_double_in_back_corner +
-                       friendly_doubles_in_line +
-                       friendly_single_double_in_line +
-                       friendly_singles_in_line +
-                       friendly_piece_is_last)
+                       # control_of_center +
+                       # control_of_edges +
+                       # friendly_density +
+                       # friendly_mobility +
+                       # enemy_density +
+                       # enemy_mobility +
+                       # friendly_single_in_edges +
+                       # friendly_double_in_edges +
+                       # friendly_single_in_center +
+                       # friendly_double_in_center +
+                       # enemy_single_in_edges +
+                       # enemy_double_in_edges +
+                       # enemy_single_in_center +
+                       # enemy_double_in_center +
+                       # friendly_double_in_back_corner +
+                       # friendly_doubles_in_line +
+                       # friendly_single_double_in_line +
+                       # friendly_singles_in_line +
+                       # friendly_piece_is_last +
+                       friendly_single_under_attack +
+                       friendly_double_under_attack)
 
         # features = {
         #     'bias': (self.weights['bias'], bias),
@@ -699,13 +686,14 @@ def main():
 
     # Initialize loop control variables
     i = 0
-    N = 2
+    N = 3
     total = 0
     winner = 0
 
     # Loop through each game iteration
     for j in range(N):
         # Simulate game moves until game over
+        last_3_moves = deque(maxlen=3)
         while True:
             # Determine which player's turn
             if i % 2 == 0:
@@ -718,7 +706,6 @@ def main():
             print("-----------------------")
             print(f"Blue score: {blue_player.get_score(board)}")
             print(f"Red score: {red_player.get_score(board)}")
-            print(f"Actual player score: {turn.get_score(turn.board)}")
 
             # Check if the game is over
             game_over = board.is_game_over()
@@ -732,14 +719,15 @@ def main():
             # Get next move from the current player
             if turn == blue_player:
                 # next_move = board.ask_for_move()
-                next_move = turn.get_best_move(red_player, 2)
-                move = next_move
+                next_move = turn.get_best_move(4)
+                last_3_moves.append(next_move)
+
+                if last_3_moves.count(next_move) > 1 and len(last_3_moves) == 3:
+                    next_movxde = turn.get_random_move()
             else:
                 next_move = turn.get_random_move()
-                from_square, to_square = next_move.upper().split('-')
-                from_coordinate = Coordinate[from_square]
-                to_coordinate = Coordinate[to_square]
-                move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
+
+            move = next_move
 
             # Apply move
             response = board.apply_move(move)
@@ -756,14 +744,14 @@ def main():
         print(f"------- TIEFE: {i} -------")
         total += i
         i = 0
-
-        winner += 1 if "Blue wins" in board.is_game_over() else 0
+        winner += 1 if "Blue" in board.is_game_over()[1] else 0
 
         board.reset()
 
     # Print results
     print(f"N: {N}")
     print(f"media: {total / N}")
+    print(f"winner: {winner}")
 
 
 if __name__ == "__main__":
