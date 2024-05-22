@@ -349,10 +349,9 @@ class AIPlayer:
             "friendly_double_under_attack": -4
         }
 
-    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, temp):
-        # board.print_board()
-        # if temp:
-        #     board.print_board()
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff):
+        if display:
+            board.print_board()
 
         if board.is_game_over()[0]:
             return float('-inf') if maximizing_player else float('inf'), None
@@ -380,54 +379,45 @@ class AIPlayer:
                                    'doubles_f_f_r_singles': True,   'doubles_r_r_f_singles': True
                                    }, color), color)
 
-        # move_score_list = []
+        if display:
+            move_score_list = []
         for move in possible_moves:
-            # if temp and depth > 2:
-            #     if len(move_score_list) > 7:
-            #         print("BBPP")
-            #     print("BP")
-            #     board.print_board()
+            if display:
+                print("BP")
+                board.print_board()
             assert "Error" not in board.apply_move(move)
-            value, _ = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, temp)
-            # move_score_list.append((move, value))
-            # if temp and depth > 2:
-            #     if len(move_score_list) > 7:
-            #         print("BBPP")
-            #     print("BP")
-            #     board.print_board()
+            value, _ = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff)
+            if display:
+                move_score_list.append((move, value))
+                print("BP")
+                board.print_board()
             assert "Good" in board.undo_move()
 
             if maximizing_player:
                 if value > best_value:
                     best_value, best_move = value, move
                 alpha = max(alpha, value)
-                if beta <= alpha:
+                if beta <= alpha and cutoff:
                     break
             else:
                 if value < best_value:
                     best_value, best_move = value, move
                 beta = min(beta, value)
-                if beta <= alpha:
+                if beta <= alpha and cutoff:
                     break
 
         return best_value, best_move
 
-    def get_best_move(self, max_depth):
+    def get_best_move(self, max_depth, display, cutoff):
         best_move = None
         best_value = float('-inf')
-        temp = False
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
-            if depth > 2:
-                temp = True
-            value, move = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), True, temp)
-            # print("- - - - - - - - - - - - - - - - - -")
-            # print(f"move: {move}, value: {value}")
-            best_move = move
-            # print(f"best move: {move}, best value: {value}")
-            # print("- - - - - - - - - - - - - - - - - -")
-            # Check for time constraints here to break early
-        assert best_move is not None
+            value, move = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), True, display, cutoff)
+            if value > best_value:
+                best_value, best_move = value, move
+            if value == float('inf'):
+                return move
         return best_move
 
     def get_random_move(self):
@@ -677,7 +667,9 @@ class AIPlayer:
 
 def main():
     board = Board()
-    board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
+    # board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
+    # board.fen_notation_into_bb("b0b0b0b02/b0b01b01b0b01/5r02/1b02r03/b01r02r02/3r03r0/2rb1rr3/1r03r0")
+    board.fen_notation_into_bb("3bb2/b02b02b01/3b02bbb0/1b06/1r0r02r01r0/6r01/5r0r0r0/6")
     blue_player = AIPlayer("Blue", board)
     red_player = AIPlayer("Red", board)
 
@@ -686,7 +678,7 @@ def main():
 
     # Initialize loop control variables
     i = 0
-    N = 3
+    N = 1
     total = 0
     winner = 0
 
@@ -719,7 +711,7 @@ def main():
             # Get next move from the current player
             if turn == blue_player:
                 # next_move = board.ask_for_move()
-                next_move = turn.get_best_move(4)
+                next_move = turn.get_best_move(4, False, False)
                 last_3_moves.append(next_move)
 
                 if last_3_moves.count(next_move) > 1 and len(last_3_moves) == 3:
