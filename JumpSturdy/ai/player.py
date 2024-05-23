@@ -386,7 +386,7 @@ class AIPlayer:
                 print("BP")
                 board.print_board()
             assert "Error" not in board.apply_move(move)
-            value, _ , count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count+1)
+            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count+1)
             if display:
                 move_score_list.append((move, value))
                 print("BP")
@@ -408,8 +408,9 @@ class AIPlayer:
         return best_value, best_move, count
 
     def get_best_move(self, max_depth, display, cutoff):
+        isBlue = True if self.color == "Blue" else False
         best_move = None
-        best_value = float('-inf')
+        best_value = float('-inf') if self.color == "Blue" else float('inf')
         count = 1
         prev_count = count
         print(f"Tiefe: 0 und Anzahl Zustände: 1")
@@ -417,13 +418,18 @@ class AIPlayer:
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
             startzeit = time.time()
-            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), True, display, cutoff, count)
+            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count)
+            print(move)
             print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
             count = countPerDepth
             print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
             prev_count=count
-            if value > best_value:
-                best_value, best_move = value, move
+            if isBlue:
+                if value > best_value:
+                    best_value, best_move = value, move
+            else:
+                if value < best_value:
+                    best_value, best_move = value, move
             print(best_move)
             if cutoff == True:
                 if value == float('inf'):

@@ -198,7 +198,7 @@ def test_problemstellung(fen,redFirst:int):
             # next_move = board.ask_for_move()
             next_move = turn.get_best_move(4, False, False)
         else:
-            next_move = turn.get_random_move()
+            next_move = turn.get_best_move(4, False, False)
 
         move = next_move
 
@@ -245,6 +245,19 @@ class TestAI(unittest.TestCase):
             blue_player = AIPlayer("Blue", board)
             print(blue_player.get_score(board))
 
+    def test_bewertungsfunktion_red(self):
+        board = Board()
+        fen = "b04b0/1rrbb1brr02/1r04rrr0/8/8/8/8/6"
+        print(fen)
+        board.fen_notation_into_bb(fen)
+        board.print_board()
+        red_player = AIPlayer("Red",board)
+        blue_player = AIPlayer("Blue",board)
+        print(red_player.get_score(board))
+        print(board.get_legal_moves_list(red_player.get_all_selected_moves()))
+        best_move = red_player.get_best_move(1,False,False)
+        best_move_blue = blue_player.get_best_move(1,False,False)
+
     def test_bewertungsfunktion_in_depth_0(self):
         board = Board()
         fen = create_random_fen()
@@ -252,9 +265,7 @@ class TestAI(unittest.TestCase):
         board.fen_notation_into_bb(fen)
         board.print_board()
         blue_player = AIPlayer("Blue", board)
-        start = time.time()
         best_move = blue_player.get_best_move(1, False, False)
-        print("Gesamtlaufzeit " + str((time.time() - start) * 1000)+ "ms")
         print(best_move)
 
     def test_compare_bewertungsfunktion_in_depth_0(self):
@@ -337,3 +348,91 @@ class TestAI(unittest.TestCase):
 
     def test_problemstellung_H_2(self):
         test_problemstellung("6/7b0/8/8/1r06/4b03/2rr1rrr02/5r0",0)
+
+    def test_problemstellung_H_3(self):
+        test_problemstellung("6/3b0b03/3r02bb1/b0b03bb2/rrrr1bb2rr1/2b01b01r01/2r01r02r0/4r01", 0)
+
+    def test_problemstellung_H_4(self):
+        test_problemstellung("6/3b0b03/3r02bb1/b0b03bb2/rrrr1bb2rr1/2b01b01r01/2r01r02r0/4r01", 1)
+
+    '''Stellungsbeschreibung: Blau gewinnt in 5 (Halb-)Zügen
+        Bester Zug: E6-D6'''
+    def test_problemstellung_F_1(self):
+        test_problemstellung("6/7b0/8/8/1r06/4b03/2rr1rrr02/5r0", 0)
+        print("Bester Zug: E6-D6")
+
+    """Stellungsbeschreibung: Rot gewinnt in 5 (Halb-)Zügen
+Bester Zug: E5-F3 oder E5-D3"""
+    def test_problemstellung_F_2(self):
+        test_problemstellung("6/4bbb02/b02b01b02/1b02b03/2b01rrrr2/6r01/r01r0r0r03/5r0", 1)
+        print("Bester Zug: E5-F3 oder E5-D3")
+    """Stellungsbeschreibung: Blau gewinnt in 2 Zügen
+Bester Zug: C6-C7"""
+    def test_problemstellung_T_1(self):
+        test_problemstellung("1b0b0b02/8/3b04/3b04/r0r06/2b05/5r0r01/6", 0)
+        print("Bester Zug: C6-C7")
+
+    """Stellungsbeschreibung: Blau gewinnt in einem Zug durch Blocken
+Bester Zug: E2-F4"""
+    def test_problemstellung_T_2(self):
+        test_problemstellung("6/4bb3/8/8/4b0r0b01/8/8/6", 0)
+        print("Bester Zug: E2-F4")
+
+    """Stellungsbeschreibung: Blau gewinnt in 2 Zügen
+Bester Zug: C6-D7"""
+    def test_problemstellung_AG_1(self):
+        test_problemstellung("6/8/8/8/b0b02b0b0/2b05/2r0r0r0r02/6", 0)
+        print("Bester Zug: C6-D7")
+    """Stellungsbeschreibung: Blau gewinnt in 2 Zügen
+Bester Zug: D6-D7"""
+    def test_problemstellung_AG_2(self):
+        test_problemstellung("3b01b0/3bb1b02/8/8/8/2r0b0r02/8/0r04r0", 0)
+        print("Bester Zug: D6-D7")
+    """Stellungsbeschreibung: Blau gewinnt in 3 Zügen
+Beste Züge: C5-C6 oder C5-B5"""
+    def test_problemstellung_C_1(self):
+        test_problemstellung("6/4b01b01/8/5b01b0/2b04r0/1b04r01/5r01rr/1r04", 0)
+        print("Beste Züge: C5-C6 oder C5-B5")
+    """Stellungsbeschreibung: Blau gewinnt in 4 Zügen
+Bester Zug: B4-C5"""
+    def test_problemstellung_C_2(self):
+        test_problemstellung("3bb2/b02b02b01/3b02bbb0/1b06/1r0r02r01r0/6r01/5r0r0r0/6", 0)
+        print("Bester Zug: B4-C5")
+    """Stellungsbeschreibung: Blau gewinnt in 2 Zügen
+Bester Zug: D4-C6"""
+    def test_problemstellung_S_1(self):
+        test_problemstellung(" 2b03/1b0b05/6b01/3bb2r01/3r02r01/2b05/2r03r01/3r02", 0)
+        print("Bester Zug: D4-C6")
+    """Stellungsbeschreibung: Blau gewinnt in 3 Zügen
+Bester Zug: B5-C5"""
+    def test_problemstellung_S_2(self):
+        test_problemstellung("2b03/1b0b05/6b01/3b02r01/1b01r02r01/2b05/2r03r01/3r02", 0)
+        print("Bester Zug: B5-C5")
+    """Stellungsbeschreibung: Rot gewinnt durch Schlagen
+Bester Zug: B5-C4"""
+    def test_problemstellung_Z_1(self):
+        test_problemstellung("6/8/6r01/2b01r0r02/1r03r02/8/8/6", 1)
+        print("Bester Zug: B5-C4")
+    """Stellungsbeschreibung: Blau muss verteidigen
+Bester Zug: C1-B2"""
+    def test_problemstellung_Z_2(self):
+        test_problemstellung("1b02b0b0/1r06/1b04b01/8/2r02b02/1r01r01r02/5r0r01/r0r01r011", 0)
+        print("Bester Zug: C1-B2")
+    """Stellungsbeschreibung: C4-B3
+Bester Zug: Rot gewinnt in 3 Zügen"""
+    def test_problemstellung_Z_3(self):
+        test_problemstellung("3b0b01/8/1b0b01b0b02/2r01b01b01/8/2rr2r02/1r06/2r03", 1)
+        print("Bester Zug: C4-B3")
+    """Stellungsbeschreibung: Gewinn in 2
+Bester Zug: A3-B2"""
+    def test_problemstellung_J_1(self):
+        test_problemstellung("6/1bb1b0bbb0b01/r02b04/2b01b0b02/2r02r02/1r02rrr02/6rr1/2r01r01", 1)
+        print("Bester Zug: A3-B2")
+    """Stellungsbeschreibung: Gewinn in 3
+Bester Zug: B3-A3"""
+    def test_problemstellung_J_2(self):
+        test_problemstellung("3b02/1bb6/1r0b02r02/2r05/4r03/8/2r03r01/6", 1)
+        print("Bester Zug: B3-A3")
+
+if __name__ == '__main__':
+    unittest.main()
