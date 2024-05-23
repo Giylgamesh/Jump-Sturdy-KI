@@ -334,3 +334,6 @@ class TestAI(unittest.TestCase):
 
     def test_problemstellung_H_1(self):
         test_problemstellung("1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/4r0r0",0)
+
+    def test_problemstellung_H_2(self):
+        test_problemstellung("6/7b0/8/8/1r06/4b03/2rr1rrr02/5r0",0)
