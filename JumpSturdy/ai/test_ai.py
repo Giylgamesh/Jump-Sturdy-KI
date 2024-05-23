@@ -314,17 +314,23 @@ class TestAI(unittest.TestCase):
     def test_alpha_beta_fen_3(self):
         text_alpha_beta("2b02bb/1bb2b03/5bb2/8/1r03r02/6r01/8/r01r01rrr0")
 
-    def test_compare_minMax_alphaBeta(self):
+    def test_compare_minMax_alphaBeta_1(self):
+        print("Start ----Compare minMax alpha Beta 1")
         text_minMax("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
         text_alpha_beta("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
+        print("End ----Compare minMax alpha Beta 1")
 
-    def test_compare_minMax_alphaBeta(self):
+    def test_compare_minMax_alphaBeta_2(self):
+        print("Start ----Compare minMax alpha Beta 2")
         text_minMax("b01bbb01b0/1b02b03/3bbr01b01/8/3rr1b0b01/8/2r01r01rr1/r0r0r01r01")
         text_alpha_beta("b01bbb01b0/1b02b03/3bbr01b01/8/3rr1b0b01/8/2r01r01rr1/r0r0r01r01")
+        print("End ----Compare minMax alpha Beta 2")
 
-    def test_compare_minMax_alphaBeta(self):
+    def test_compare_minMax_alphaBeta_3(self):
+        print("Start ----Compare minMax alpha Beta 3")
         text_minMax("2b02bb/1bb2b03/5bb2/8/1r03r02/6r01/8/r01r01rrr0")
         text_alpha_beta("2b02bb/1bb2b03/5bb2/8/1r03r02/6r01/8/r01r01rrr0")
+        print("End ----Compare minMax alpha Beta 3")
 
     def test_problemstellung_AC_1(self):
         test_problemstellung(create_random_fen(),0)
@@ -419,3 +425,12 @@ Bester Zug: B3-A3"""
     def test_problemstellung_J_2(self):
         test_problemstellung("3b02/1bb6/1r0b02r02/2r05/4r03/8/2r03r01/6",1)
 
+
+
+if __name__ == '__main__':
+    #unittest.main()
+    #unittest.TestCase(test_compare_minMax_alphaBeta)
+    test_ai = TestAI()
+    test_ai.test_compare_minMax_alphaBeta_1()
+    test_ai.test_compare_minMax_alphaBeta_2()
+    test_ai.test_compare_minMax_alphaBeta_3()
