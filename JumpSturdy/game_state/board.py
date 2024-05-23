@@ -838,6 +838,10 @@ class Board:
 
         return legal_moves
 
+    def get_all_selected_moves(self, color):
+        return self.get_legal_moves({'singles_left_empty': True,'singles_front_empty': True,'singles_right_empty': True,'singles_kill_left_singles': True,'singles_kill_left_doubles': True,'singles_kill_right_singles': True,'singles_kill_right_doubles': True,'singles_upgrade_left': True,'singles_upgrade_front': True,'singles_upgrade_right': True,'doubles_l_l_f_empty': True,'doubles_f_f_l_empty': True,'doubles_f_f_r_empty': True,'doubles_r_r_f_empty': True,'doubles_kill_l_l_f_singles': True,'doubles_kill_l_l_f_doubles': True,'doubles_kill_f_f_l_singles': True,'doubles_kill_f_f_l_doubles': True,'doubles_kill_f_f_r_singles': True,'doubles_kill_f_f_r_doubles': True,'doubles_kill_r_r_f_singles': True,'doubles_kill_r_r_f_doubles': True,'doubles_l_l_f_singles': True,'doubles_f_f_l_singles': True,'doubles_f_f_r_singles': True,'doubles_r_r_f_singles': True}, self.color)
+
+
     def get_all_legal_moves(self, player_color):
         # Get a dict of all legal moves
         all_categories = parse_move_categories("alle", self.move_categories_dict)
@@ -956,7 +960,6 @@ class Board:
         new_board.last_state = self.last_state
         new_board.actual_state = self.actual_state
         return new_board
-
 
 
 class Move:
