@@ -436,6 +436,7 @@ class AIPlayer:
                     return move
         print(f"Anzahl durchlaufener Zustände: {count}")
         print("Gesamtlaufzeit: " + str((time.time() - start) * 1000)+ "ms")
+        best_move = str(best_move)[-5:]
         return best_move
 
     def get_random_move(self):
