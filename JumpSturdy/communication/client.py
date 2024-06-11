@@ -2,7 +2,7 @@ import pygame
 import json
 from network import Network
 from JumpSturdy.ai.player import AIPlayer
-from JumpSturdy. game_state. board import Board
+from JumpSturdy.game_state. board import Board
 pygame.font.init()
 
 def main():

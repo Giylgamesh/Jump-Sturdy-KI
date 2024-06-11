@@ -7,6 +7,20 @@ from JumpSturdy.game_state.board import Board, Coordinate, Move
 
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
+    """
+    Performs value iteration to update weights of blue player based on outcome of simulated games
+
+    Parameters:
+    - blue_player: The blue player object.
+    - red_player: The red player object.
+    - board: The game board.
+    - learning_rate: The learning rate for weight updates. Default is 0.1.
+    - discount_factor: The discount factor for future rewards. Default is 0.95.
+
+    Returns:
+    - The updated weights of the blue player.
+    """
+    
     blue_player.weights = normalize_weights(blue_player.weights)
     total_i = 0
     total_e = 0
@@ -65,6 +79,19 @@ def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_
 
 
 def simulate_game(board, friendly_player, enemy_player):
+    """
+    Simulates a game between two players on a given board.
+
+    Parameters:
+    - board (Board): The game board on which the game is being played.
+    - friendly_player (Player): The player representing the friendly side.
+    - enemy_player (Player): The player representing the enemy side.
+
+    Returns:
+    - history (list): A list of tuples representing the state, action, reward history of the game.
+    - reward (int): The reward obtained by the friendly player at the end of the game.
+    """
+    
     i = 0
     history = []  # To store state, action, reward
     friendly_player.weights = normalize_weights(friendly_player.weights)
@@ -82,10 +109,6 @@ def simulate_game(board, friendly_player, enemy_player):
         to_coordinate = Coordinate[to_square]
         next_move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
 
-        # Print for debugging
-        # board.print_board()
-        # print(f"{turn.color} moves {from_square}-{to_square}")
-
         # Get heuristic value
         heuristic, features = friendly_player.get_score()
 
@@ -101,10 +124,6 @@ def simulate_game(board, friendly_player, enemy_player):
 
         # Break if game is over
         if game_over != "Game not over":
-            # Print for debugging
-            # board.print_board()
-            print(game_over)
-
             reward = 100 if "Blue wins" in game_over else 0
 
             # Get heuristic value
@@ -114,7 +133,6 @@ def simulate_game(board, friendly_player, enemy_player):
             history.append((state, features, next_move, heuristic, turn))
 
             # Reset board
-            # board.reset()
             break
 
     return history, reward
@@ -350,6 +368,25 @@ class AIPlayer:
         }
 
     def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count):
+        """
+        Implements the alpha-beta pruning algorithm for game tree search.
+
+        Parameters:
+        - board (Baord): current game board state.
+        - depth (int): current depth of the search tree.
+        - alpha (float): best value that the maximizing player can guarantee at this level or above.
+        - beta (float): best value that the minimizing player can guarantee at this level or above.
+        - maximizing_player (boolean): indicating whether the current player is maximizing or not.
+        - display (boolean):  indicating whether to display the board during the search.
+        - cutoff (boolean): indicating whether to apply cutoff when alpha >= beta.
+        - count (int): number of nodes visited during the search.
+
+        Returns:
+        - best_value (float): The best value that can be achieved from the current game state.
+        - best_move (String): The best move to make from the current game state.
+        - count (int): The updated number of nodes visited during the search.
+        """
+        
         if display:
             board.print_board()
 
@@ -408,6 +445,18 @@ class AIPlayer:
         return best_value, best_move, count
 
     def get_best_move(self, max_depth, display, cutoff):
+        """
+        Finds the best move for the player using the alpha-beta pruning algorithm
+
+        Args:
+            max_depth (int): The maximum depth to search in the game tree.
+            display (bool): Flag indicating whether to display the game board during the search. We use this for debugging purposes.
+            cutoff (bool): Flag indicating whether to use cutoffs to improve search efficiency.
+
+        Returns:
+            str: The best move as a string (e.g. B2 - B3, for a move from position B2 to the position B3.)
+
+        """
         isBlue = True if self.color == "Blue" else False
         best_move = None
         best_value = float('-inf') if self.color == "Blue" else float('inf')
@@ -440,6 +489,12 @@ class AIPlayer:
         return best_move
 
     def get_random_move(self):
+        """
+        Generates a random move for the player
+
+        Returns:
+            Move: "move" object representing the randomly generated move
+        """
         posible_moves = self.board.get_legal_moves_list(self.board.get_legal_moves({'singles_left_empty': True,
                                                                                     'singles_front_empty': True,
                                                                                     'singles_right_empty': True,
@@ -478,7 +533,28 @@ class AIPlayer:
     def get_all_selected_moves(self):
         return self.board.get_legal_moves({'singles_left_empty': True,'singles_front_empty': True,'singles_right_empty': True,'singles_kill_left_singles': True,'singles_kill_left_doubles': True,'singles_kill_right_singles': True,'singles_kill_right_doubles': True,'singles_upgrade_left': True,'singles_upgrade_front': True,'singles_upgrade_right': True,'doubles_l_l_f_empty': True,'doubles_f_f_l_empty': True,'doubles_f_f_r_empty': True,'doubles_r_r_f_empty': True,'doubles_kill_l_l_f_singles': True,'doubles_kill_l_l_f_doubles': True,'doubles_kill_f_f_l_singles': True,'doubles_kill_f_f_l_doubles': True,'doubles_kill_f_f_r_singles': True,'doubles_kill_f_f_r_doubles': True,'doubles_kill_r_r_f_singles': True,'doubles_kill_r_r_f_doubles': True,'doubles_l_l_f_singles': True,'doubles_f_f_l_singles': True,'doubles_f_f_r_singles': True,'doubles_r_r_f_singles': True}, self.color)
 
+
     def get_score(self, board):
+        """
+        This method calculates the score for the current player based on various factors such as material score, advanced pieces,
+        control over the board, strategic positions, and other cases. It uses binary representations of the board's state to
+        perform the calculations. The calculated score is returned as the result.
+
+        Parameters:
+        - board: The current board state.
+
+        Returns:
+        - (float) calculated score for the current player.
+
+        Note: board state is represented with following attributes:
+        - BLUE_SINGLES: Binary representation of the blue player's singles pieces.
+        - BLUE_DOUBLES: Binary representation of the blue player's doubles pieces.
+        - RED_SINGLES: Binary representation of the red player's singles pieces.
+        - RED_DOUBLES: Binary representation of the red player's doubles pieces.
+
+        "weights" come from the player object itself.
+        """
+        
         # board.print_board()
         blue_singles_binary = bin(board.BLUE_SINGLES)[2:].zfill(64)
         blue_doubles_binary = bin(board.BLUE_DOUBLES)[2:].zfill(64)
@@ -688,6 +764,11 @@ class AIPlayer:
 
 
 def main():
+    """
+    This is the main method that sets up the game board and players, 
+    and then simulates a game between two AI players. Here we give the board a FEN-String to generate the initial board state.
+    This allows us to start the game from any state (e.g. Game-start, early-game, mid-game, late-game)
+    """
     board = Board()
     # board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
     # board.fen_notation_into_bb("b0b0b0b02/b0b01b01b0b01/5r02/1b02r03/b01r02r02/3r03r0/2rb1rr3/1r03r0")
