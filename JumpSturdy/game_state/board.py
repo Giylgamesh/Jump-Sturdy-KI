@@ -2,8 +2,6 @@ from enum import Enum
 import os
 from random import choice
 import copy
-import random
-
 
 def there_is(bitboard, n):
     """Check if the nth bit of the bitboard is set (1)."""
@@ -868,7 +866,7 @@ class Board:
         return legal_moves
 
     def get_all_selected_moves(self, color):
-        return self.get_legal_moves({'singles_left_empty': True,'singles_front_empty': True,'singles_right_empty': True,'singles_kill_left_singles': True,'singles_kill_left_doubles': True,'singles_kill_right_singles': True,'singles_kill_right_doubles': True,'singles_upgrade_left': True,'singles_upgrade_front': True,'singles_upgrade_right': True,'doubles_l_l_f_empty': True,'doubles_f_f_l_empty': True,'doubles_f_f_r_empty': True,'doubles_r_r_f_empty': True,'doubles_kill_l_l_f_singles': True,'doubles_kill_l_l_f_doubles': True,'doubles_kill_f_f_l_singles': True,'doubles_kill_f_f_l_doubles': True,'doubles_kill_f_f_r_singles': True,'doubles_kill_f_f_r_doubles': True,'doubles_kill_r_r_f_singles': True,'doubles_kill_r_r_f_doubles': True,'doubles_l_l_f_singles': True,'doubles_f_f_l_singles': True,'doubles_f_f_r_singles': True,'doubles_r_r_f_singles': True}, self.color)
+        return self.get_legal_moves({'singles_left_empty': True,'singles_front_empty': True,'singles_right_empty': True,'singles_kill_left_singles': True,'singles_kill_left_doubles': True,'singles_kill_right_singles': True,'singles_kill_right_doubles': True,'singles_upgrade_left': True,'singles_upgrade_front': True,'singles_upgrade_right': True,'doubles_l_l_f_empty': True,'doubles_f_f_l_empty': True,'doubles_f_f_r_empty': True,'doubles_r_r_f_empty': True,'doubles_kill_l_l_f_singles': True,'doubles_kill_l_l_f_doubles': True,'doubles_kill_f_f_l_singles': True,'doubles_kill_f_f_l_doubles': True,'doubles_kill_f_f_r_singles': True,'doubles_kill_f_f_r_doubles': True,'doubles_kill_r_r_f_singles': True,'doubles_kill_r_r_f_doubles': True,'doubles_l_l_f_singles': True,'doubles_f_f_l_singles': True,'doubles_f_f_r_singles': True,'doubles_r_r_f_singles': True}, color)
 
 
     def get_all_legal_moves(self, player_color):

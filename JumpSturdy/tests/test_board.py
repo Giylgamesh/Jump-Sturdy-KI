@@ -1,10 +1,8 @@
 import unittest
 import time
-from board import Board
-from board import Move
-from board import Coordinate
-
-
+from game_state.board import Board
+from game_state.board import Move
+from game_state.board import Coordinate
 
 
 def swap_b_r(fen):

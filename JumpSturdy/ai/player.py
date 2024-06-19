@@ -3,7 +3,7 @@ import random
 import math
 import time
 from collections import deque
-from JumpSturdy.game_state.board import Board, Coordinate, Move
+from game_state.board import Board, Coordinate, Move
 
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
@@ -20,7 +20,7 @@ def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_
     Returns:
     - The updated weights of the blue player.
     """
-    
+
     blue_player.weights = normalize_weights(blue_player.weights)
     total_i = 0
     total_e = 0
@@ -91,7 +91,7 @@ def simulate_game(board, friendly_player, enemy_player):
     - history (list): A list of tuples representing the state, action, reward history of the game.
     - reward (int): The reward obtained by the friendly player at the end of the game.
     """
-    
+
     i = 0
     history = []  # To store state, action, reward
     friendly_player.weights = normalize_weights(friendly_player.weights)
@@ -249,7 +249,7 @@ def piece_in_front(weights, first_bitboard, type1, second_bitboard, type2):
     return amount
 
 
-def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, enemy_doubles):
+def piece_is_last(weights, friendly_singles, friendly_doubles, enemy_singles, enemy_doubles):
     # Find the furthest front/back friendly/enemy piece
     most_advanced_single_row = 0
     most_advanced_double_row = 0
@@ -257,7 +257,7 @@ def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, en
     less_advanced_double_row = 8
 
     for row in range(7, -1, -1):
-        if '1' in friendly_sinlges[row * 8:(row + 1) * 8]:
+        if '1' in friendly_singles[row * 8:(row + 1) * 8]:
             most_advanced_single_row = row
             type = "singles"
             break
@@ -267,7 +267,7 @@ def piece_is_last(weights, friendly_sinlges, friendly_doubles, enemy_sinlges, en
             type = "doubles"
             break
     for row in range(7, -1, -1):
-        if '1' in enemy_sinlges[row * 8:(row + 1) * 8]:
+        if '1' in enemy_singles[row * 8:(row + 1) * 8]:
             less_advanced_single_row = row
             break
     for row in range(7, -1, -1):
@@ -307,7 +307,19 @@ def piece_under_attack(weights, friend_pieces, enemy_singles, enemy_doubles):
 
 
 def normalize_weights(weights):
-    return weights
+    """
+    Normalize the given weights dictionary.
+
+    The function calculates the total sum of the values in the weights dictionary.
+    If the total sum is not zero, it normalizes the weights by dividing each value by the total sum.
+    If the total sum is zero, it returns the original weights dictionary unchanged.
+
+    Args:
+        weights (dict): A dictionary containing the weights.
+
+    Returns:
+        dict: The normalized weights dictionary.
+    """
     total = sum(weights.values())
     if total != 0:
         normalized_weights = {k: v / total for k, v in weights.items()}
@@ -317,6 +329,10 @@ def normalize_weights(weights):
 
 
 class AIPlayer:
+    """Our AI Player class. It includes all the actions the AI Player 
+    needs to play the game.
+    """
+    
     def __init__(self, color, board):
         # Initialize AI components
         self.color = color
@@ -367,10 +383,10 @@ class AIPlayer:
             "friendly_double_under_attack": -4
         }
 
-        
-                # we define a zobsrist table to use zobrist hashing in our playerAI
-    def initialize_zobrist_table(num_coordinates, num_different_piece_types): 
-        """we initiate the hash table as an array. Blue player has four different piece types: 
+        # we define a zobsrist table to use zobrist hashing in our playerAI
+
+    def initialize_zobrist_table(self, num_coordinates, num_different_piece_types):
+        """we initiate the hash table as an array. Blue player has 3 different piece types: 
         1: BLUE_SINGLES, 2: BLUE_DOUBLES, 3: BLUE_BLOCKED. Red player has the same.
         so we have 6 piece types.
         
@@ -380,55 +396,53 @@ class AIPlayer:
         Returns:
             zobrist_table (array): zobrist table is implemented as a 2 dimensional array
         """
-    
-        zobrist_table = [] # initiate list
+
+        zobrist_table = []  # initiate list
         # create 2 dimensional list for position and piece type
-        for coordinate in range(num_coordinates): 
-                zobrist_table.append([])
-                for piece_type in range(num_different_piece_types):
-                    zobrist_table[coordinate].append(random.getrandbits(num_coordinates)) # random 64 bit number generator
-                        
+        for coordinate in range(num_coordinates):
+            zobrist_table.append([])
+            for piece_type in range(num_different_piece_types):
+                zobrist_table[coordinate].append(random.getrandbits(num_coordinates))  # random 64 bit number generator
+
         return zobrist_table
 
-    # initialising zobrist table with 6 different pieces
-    zobrist_table = initialize_zobrist_table(64, 6)  
-    
-        
-    def calculate_zobrist_hash(self):
+
+    def calculate_zobrist_hash(self, zobrist_table):
         """Calculate Zobrist hash value for the given board state
 
         Args:
+            zobrist_table (Array)
             # NOT UP TO DATE board (Board): The current game board state
             # NOT UP TO DATE turn (str): tells us whos turn it is in this state
 
         Returns:
             int: The Zobrist hash value for the given board state."""
-        
+
         hash_value = 0
-        
+
         for square in range(64):
             # XOR the hash value with the Zobrist key for each occupied square
-            if self.board.BLUE_SINGLES & (1 << square): # we are using the shift operator here
-                hash_value ^= self.zobrist_table[square][1]  # Blue Single
+            if self.board.BLUE_SINGLES & (1 << square):  # we are using the shift operator here
+                hash_value ^= zobrist_table[square][1]  # Blue Single
             if self.board.BLUE_DOUBLES & (1 << square):
-                hash_value ^= self.zobrist_table[square][2]  # Blue Double
+                hash_value ^= zobrist_table[square][2]  # Blue Double
             if self.board.RED_SINGLES & (1 << square):
-                hash_value ^= self.zobrist_table[square][3]  # Red Single
+                hash_value ^= zobrist_table[square][3]  # Red Single
             if self.board.RED_DOUBLES & (1 << square):
-                hash_value ^= self.zobrist_table[square][4]  # Red Double
+                hash_value ^= zobrist_table[square][4]  # Red Double
             if self.board.BLUE_BLOCKED & (1 << square):
-                hash_value ^= self.zobrist_table[square][5]  # Blue Blocked
+                hash_value ^= zobrist_table[square][5]  # Blue Blocked
             if self.board.RED_BLOCKED & (1 << square):
-                hash_value ^= self.zobrist_table[square][6]  # Red Blocked
-        
+                hash_value ^= zobrist_table[square][6]  # Red Blocked
+
         # # Include turn information in the hash
         # if turn == "Blue":
         #     hash_value ^= self.zobrist_table[64][0]  # Extra row for turn information
         # else:
         #     hash_value ^= self.zobrist_table[64][1]       
-        
+
         return hash_value
-    
+
     def update_zobrist_hash(self, move, old_hash):
         """Update the Zobrist hash value after a move.
 
@@ -443,7 +457,12 @@ class AIPlayer:
         from_square = move.from_
         to_square = move.to
 
+        #board_state = # To Do: board_state doest exist yet and I forgot what it should be exactly. should be 
+        # array with all coordinates of all pieces. so a bitboard.
+        
+        
         # XOR out the old pieces from the hash
+        # this ^= operation does XOR
         new_hash ^= self.zobrist_table[from_square][self.board_state[from_square]]
         new_hash ^= self.zobrist_table[to_square][self.board_state[to_square]]
 
@@ -452,18 +471,62 @@ class AIPlayer:
         new_hash ^= self.zobrist_table[to_square][self.board_state[from_square]]  # Piece moved to the new square
 
         # update turn information 
-        #new_hash ^= self.zobrist_table[64][0] if self.board.turn == "Blue" else self.zobrist_table[64][1]
-
+        # new_hash ^= self.zobrist_table[64][0] if self.board.turn == "Blue" else self.zobrist_table[64][1]
 
         return new_hash
     
-    
     # implementing the transposition table
-    def transposition_table(self):
+    def initialise_transposition_table(board_state, alpha_value=int, beta_value=int, player_color=str, best_move=str, board_score=float):
+        """
+        Initializes the transposition table with a single entry.
 
-        return 0        
-    
-    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, transposition_table={}):
+        Args:
+            board_state (bitboards): The board state to be stored in the transposition table.
+            alpha_value (int): The alpha value associated with the board state
+            beta_value (int): The beta value associated with the board state.
+            player_color (str): The color of the player associated with the board state
+            best_move (str): The best move associated with the board state
+            board_score (float): The score of the board state
+
+        Returns:
+            list: The transposition table with the initialized entry.
+        """
+        transposition_table = []
+        transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
+        return transposition_table
+
+    def initialise_transposition_table(board_state, alpha_value=int, beta_value=int, player_color=str, best_move=str, board_score=int):
+        """_summary_
+
+        Args:
+            board_state (_type_): _description_
+            alpha_value (_type_, optional): _description_. Defaults to int.
+            beta_value (_type_, optional): _description_. Defaults to int.
+            player_color (_type_, optional): _description_. Defaults to str.
+            best_move (_type_, optional): _description_. Defaults to str.
+            board_score (_type_, optional): _description_. Defaults to int.
+
+        Returns:
+            _type_: _description_
+        """
+        transposition_table = []
+        transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
+        return transposition_table
+
+
+
+    def update_transposition_table(transposition_table, board_state, alpha_value, beta_value, player_color, best_move, board_score):
+        """add the new transposition table entry as last element of the transposition table"""
+        return transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
+
+
+    def search_transposition_table(transposition_table, board_state):
+        for i, entry in enumerate(transposition_table):
+            if entry[0] == board_state:
+                return entry, i
+        return None, -1
+
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, transposition_table):
         """
         Implements the alpha-beta pruning algorithm for game tree search.
 
@@ -483,18 +546,20 @@ class AIPlayer:
         - best_move (String): The best move to make from the current game state.
         - count (int): The updated number of nodes visited during the search.
         """
-        
+
         if display:
             board.print_board()
-            
-        board_hash = self.calculate_zobrist_hash() # here we calculate the hash of the board by using our zobrist_hash method from Board class
-        
-        if board_hash in transposition_table: 
-            transposition_table_element = transposition_table[board_hash] # element of transposition table are board states
-            if transposition_table_element["depth"] >= depth: # check if element in TT is from deeper search level
-                return transposition_table_element["value"], transposition_table_element["move"], count # return value and best move from that game state 
-            
-        
+
+        board_hash = self.calculate_zobrist_hash()  # here we calculate the hash of the board by using our
+        # zobrist_hash method from Board class
+
+        if board_hash in transposition_table:
+            transposition_table_element = transposition_table[
+                board_hash]  # element of transposition table are board states
+            if transposition_table_element["depth"] >= depth:  # check if element in TT is from deeper search level
+                return transposition_table_element["value"], transposition_table_element[
+                    "move"], count  # return value and best move from that game state
+
         if board.is_game_over()[0]:
             return float('-inf') if maximizing_player else float('inf'), None, count
 
@@ -506,20 +571,20 @@ class AIPlayer:
 
         color = "Blue" if maximizing_player else "Red"
         possible_moves = board.get_legal_moves_moves(
-            board.get_legal_moves({'singles_left_empty': True,  'singles_front_empty': True,
-                                   'singles_right_empty': True, 'singles_kill_left_singles': True,
-                                   'singles_kill_left_doubles': True,   'singles_kill_right_singles': True,
-                                   'singles_kill_right_doubles': True,  'singles_upgrade_left': True,
-                                   'singles_upgrade_front': True,   'singles_upgrade_right': True,
-                                   'doubles_l_l_f_empty': True, 'doubles_f_f_l_empty': True,
-                                   'doubles_f_f_r_empty': True, 'doubles_r_r_f_empty': True,
-                                   'doubles_kill_l_l_f_singles': True,  'doubles_kill_l_l_f_doubles': True,
-                                   'doubles_kill_f_f_l_singles': True,  'doubles_kill_f_f_l_doubles': True,
-                                   'doubles_kill_f_f_r_singles': True,  'doubles_kill_f_f_r_doubles': True,
-                                   'doubles_kill_r_r_f_singles': True,  'doubles_kill_r_r_f_doubles': True,
-                                   'doubles_l_l_f_singles': True,   'doubles_f_f_l_singles': True,
-                                   'doubles_f_f_r_singles': True,   'doubles_r_r_f_singles': True
-                                   }, color), color)
+            board.get_legal_moves({'singles_left_empty': True, 'singles_front_empty': True,
+                                    'singles_right_empty': True, 'singles_kill_left_singles': True,
+                                    'singles_kill_left_doubles': True, 'singles_kill_right_singles': True,
+                                    'singles_kill_right_doubles': True, 'singles_upgrade_left': True,
+                                    'singles_upgrade_front': True, 'singles_upgrade_right': True,
+                                    'doubles_l_l_f_empty': True, 'doubles_f_f_l_empty': True,
+                                    'doubles_f_f_r_empty': True, 'doubles_r_r_f_empty': True,
+                                    'doubles_kill_l_l_f_singles': True, 'doubles_kill_l_l_f_doubles': True,
+                                    'doubles_kill_f_f_l_singles': True, 'doubles_kill_f_f_l_doubles': True,
+                                    'doubles_kill_f_f_r_singles': True, 'doubles_kill_f_f_r_doubles': True,
+                                    'doubles_kill_r_r_f_singles': True, 'doubles_kill_r_r_f_doubles': True,
+                                    'doubles_l_l_f_singles': True, 'doubles_f_f_l_singles': True,
+                                    'doubles_f_f_r_singles': True, 'doubles_r_r_f_singles': True
+                                    }, color), color)
 
         if display:
             move_score_list = []
@@ -528,7 +593,8 @@ class AIPlayer:
                 print("BP")
                 board.print_board()
             assert "Error" not in board.apply_move(move)
-            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count+1)
+            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff,
+                                                count + 1)
             if display:
                 move_score_list.append((move, value))
                 print("BP")
@@ -547,9 +613,9 @@ class AIPlayer:
                 beta = min(beta, value)
                 if beta <= alpha and cutoff:
                     break
-                
-                                
-        transposition_table[board_hash] = {"value": best_value, "depth": depth, "move": best_move} # put the evaluation of the game state into the TT
+
+        transposition_table[board_hash] = {"value": best_value, "depth": depth,
+                                            "move": best_move}  # put the evaluation of the game state into the TT
         return best_value, best_move, count
 
     def get_best_move(self, max_depth, display, cutoff):
@@ -567,7 +633,7 @@ class AIPlayer:
         """
         # initialise the transposition table
         transposition_table = {}
-        
+
         isBlue = True if self.color == "Blue" else False
         best_move = None
         best_value = float('-inf') if self.color == "Blue" else float('inf')
@@ -578,12 +644,15 @@ class AIPlayer:
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
             startzeit = time.time()
-            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, transposition_table) # i newly added the transposition table here as arg
+            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue,
+                                                            display, cutoff, count,
+                                                            transposition_table)  # I newly added the transposition
+            # table here as arg
             print(move)
             print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
             count = countPerDepth
             print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
-            prev_count=count
+            prev_count = count
             if isBlue:
                 if value > best_value:
                     best_value, best_move = value, move
@@ -595,7 +664,7 @@ class AIPlayer:
                 if value == float('inf'):
                     return move
         print(f"Anzahl durchlaufener Zustände: {count}")
-        print("Gesamtlaufzeit: " + str((time.time() - start) * 1000)+ "ms")
+        print("Gesamtlaufzeit: " + str((time.time() - start) * 1000) + "ms")
         best_move = str(best_move)[-5:]
         return best_move
 
@@ -642,8 +711,23 @@ class AIPlayer:
         return move
 
     def get_all_selected_moves(self):
-        return self.board.get_legal_moves({'singles_left_empty': True,'singles_front_empty': True,'singles_right_empty': True,'singles_kill_left_singles': True,'singles_kill_left_doubles': True,'singles_kill_right_singles': True,'singles_kill_right_doubles': True,'singles_upgrade_left': True,'singles_upgrade_front': True,'singles_upgrade_right': True,'doubles_l_l_f_empty': True,'doubles_f_f_l_empty': True,'doubles_f_f_r_empty': True,'doubles_r_r_f_empty': True,'doubles_kill_l_l_f_singles': True,'doubles_kill_l_l_f_doubles': True,'doubles_kill_f_f_l_singles': True,'doubles_kill_f_f_l_doubles': True,'doubles_kill_f_f_r_singles': True,'doubles_kill_f_f_r_doubles': True,'doubles_kill_r_r_f_singles': True,'doubles_kill_r_r_f_doubles': True,'doubles_l_l_f_singles': True,'doubles_f_f_l_singles': True,'doubles_f_f_r_singles': True,'doubles_r_r_f_singles': True}, self.color)
+        """Returns all the legal moves for the player.
 
+        The legal moves are determined based on the current state of the board and the player's color.
+
+        Returns:
+            list: A list of legal moves for the player."""
+            
+        return self.board.get_legal_moves(
+            {'singles_left_empty': True, 'singles_front_empty': True, 'singles_right_empty': True,
+                'singles_kill_left_singles': True, 'singles_kill_left_doubles': True, 'singles_kill_right_singles': True,
+                'singles_kill_right_doubles': True, 'singles_upgrade_left': True, 'singles_upgrade_front': True,
+                'singles_upgrade_right': True, 'doubles_l_l_f_empty': True, 'doubles_f_f_l_empty': True,
+                'doubles_f_f_r_empty': True, 'doubles_r_r_f_empty': True, 'doubles_kill_l_l_f_singles': True,
+                'doubles_kill_l_l_f_doubles': True, 'doubles_kill_f_f_l_singles': True, 'doubles_kill_f_f_l_doubles': True,
+                'doubles_kill_f_f_r_singles': True, 'doubles_kill_f_f_r_doubles': True, 'doubles_kill_r_r_f_singles': True,
+                'doubles_kill_r_r_f_doubles': True, 'doubles_l_l_f_singles': True, 'doubles_f_f_l_singles': True,
+                'doubles_f_f_r_singles': True, 'doubles_r_r_f_singles': True}, self.color)
 
     def get_score(self, board):
         """
@@ -665,7 +749,7 @@ class AIPlayer:
 
         "weights" come from the player object itself.
         """
-        
+
         # board.print_board()
         blue_singles_binary = bin(board.BLUE_SINGLES)[2:].zfill(64)
         blue_doubles_binary = bin(board.BLUE_DOUBLES)[2:].zfill(64)
@@ -790,52 +874,52 @@ class AIPlayer:
 
         # Under-Attack
         friendly_single_under_attack = self.weights["friendly_single_under_attack"] * piece_under_attack(self.weights,
-                                                                                                         blue_singles_binary,
-                                                                                                         red_singles_binary,
-                                                                                                         red_doubles_binary)
+                                                                                                            blue_singles_binary,
+                                                                                                            red_singles_binary,
+                                                                                                            red_doubles_binary)
         friendly_double_under_attack = self.weights["friendly_double_under_attack"] * piece_under_attack(self.weights,
-                                                                                                         blue_doubles_binary,
-                                                                                                         red_singles_binary,
-                                                                                                         red_doubles_binary)
+                                                                                                            blue_doubles_binary,
+                                                                                                            red_singles_binary,
+                                                                                                            red_doubles_binary)
 
         bias = self.weights["bias"] * 0
 
         total_score = (bias +
-                       friendly_singles_value +
-                       friendly_doubles_value +
-                       friendly_material_score +
-                       enemy_singles_value +
-                       enemy_doubles_value +
-                       enemy_material_score +
-                       friendly_most_advanced_singles +
-                       friendly_most_advanced_doubles +
-                       enemy_most_advanced_singles +
-                       enemy_most_advanced_doubles +
-                       friendly_advancement_of_singles +
-                       friendly_advancement_of_doubles +
-                       enemy_advancement_of_singles +
-                       enemy_advancement_of_doubles +
-                       # control_of_center +
-                       # control_of_edges +
-                       # friendly_density +
-                       # friendly_mobility +
-                       # enemy_density +
-                       # enemy_mobility +
-                       # friendly_single_in_edges +
-                       # friendly_double_in_edges +
-                       # friendly_single_in_center +
-                       # friendly_double_in_center +
-                       # enemy_single_in_edges +
-                       # enemy_double_in_edges +
-                       # enemy_single_in_center +
-                       # enemy_double_in_center +
-                       # friendly_double_in_back_corner +
-                       # friendly_doubles_in_line +
-                       # friendly_single_double_in_line +
-                       # friendly_singles_in_line +
-                       # friendly_piece_is_last +
-                       friendly_single_under_attack +
-                       friendly_double_under_attack)
+                        friendly_singles_value +
+                        friendly_doubles_value +
+                        friendly_material_score +
+                        enemy_singles_value +
+                        enemy_doubles_value +
+                        enemy_material_score +
+                        friendly_most_advanced_singles +
+                        friendly_most_advanced_doubles +
+                        enemy_most_advanced_singles +
+                        enemy_most_advanced_doubles +
+                        friendly_advancement_of_singles +
+                        friendly_advancement_of_doubles +
+                        enemy_advancement_of_singles +
+                        enemy_advancement_of_doubles +
+                        # control_of_center +
+                        # control_of_edges +
+                        # friendly_density +
+                        # friendly_mobility +
+                        # enemy_density +
+                        # enemy_mobility +
+                        # friendly_single_in_edges +
+                        # friendly_double_in_edges +
+                        # friendly_single_in_center +
+                        # friendly_double_in_center +
+                        # enemy_single_in_edges +
+                        # enemy_double_in_edges +
+                        # enemy_single_in_center +
+                        # enemy_double_in_center +
+                        # friendly_double_in_back_corner +
+                        # friendly_doubles_in_line +
+                        # friendly_single_double_in_line +
+                        # friendly_singles_in_line +
+                        # friendly_piece_is_last +
+                        friendly_single_under_attack +
+                        friendly_double_under_attack)
 
         # features = {
         #     'bias': (self.weights['bias'], bias),
@@ -886,6 +970,10 @@ def main():
     board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
     blue_player = AIPlayer("Blue", board)
     red_player = AIPlayer("Red", board)
+    
+    # initialising zobrist table with 6 different pieces for us (blue player)
+    zobrist_table = blue_player.initialize_zobrist_table(64, 6)
+
 
     # Value-Iteration (didn't work)
     # new_weights = value_iteration(blue_player, red_player, board)
@@ -939,7 +1027,7 @@ def main():
             from_coordinate = Coordinate[from_square]
             to_coordinate = Coordinate[to_square]
             # now we can create Move object
-            move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)  
+            move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
 
             # Apply move
             response = board.apply_move(move)
@@ -953,7 +1041,7 @@ def main():
             # Increment turn
             i += 1
 
-        print(f"------- Züge: {i/2+0.5} -------")
+        print(f"------- Züge: {i / 2 + 0.5} -------")
         total += i
         i = 0
         winner += 1 if "Blue" in board.is_game_over()[1] else 0
