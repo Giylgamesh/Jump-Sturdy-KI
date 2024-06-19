@@ -4,6 +4,9 @@ from board import Board
 from board import Move
 from board import Coordinate
 
+
+
+
 def swap_b_r(fen):
     swaped_fen = ""
     for i in range(7, -1, -1):

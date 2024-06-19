@@ -1,9 +1,11 @@
+
+
 import unittest
 import time
 import random
 
 from JumpSturdy.ai.player import AIPlayer
-from JumpSturdy. game_state. board import Board
+from JumpSturdy.game_state. board import Board
 
 def create_random_fen():
     fen = ""

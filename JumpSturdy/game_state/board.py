@@ -2,6 +2,7 @@ from enum import Enum
 import os
 from random import choice
 import copy
+import random
 
 
 def there_is(bitboard, n):
@@ -361,6 +362,18 @@ class Board:
 
     # Move-related Methods
     def apply_move(self, move):
+        """Apply the given move to the game state.
+
+        Args:
+            move (Move): Move object. The move to be applied.
+
+        Returns:
+            str: A string indicating the result of the move.
+
+        Raises:
+            ValueError: If the move is invalid or the coordinates are out of range.
+        """
+        
         # Check invalid input
         if move.from_ == move.to:
             return "Error: Skipping turns is not allowed"
@@ -977,6 +990,7 @@ class Board:
         new_board.actual_state = self.actual_state
         return new_board
 
+  
 
 class Move:
     def __init__(self, player, fromm, to):

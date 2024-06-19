@@ -367,7 +367,103 @@ class AIPlayer:
             "friendly_double_under_attack": -4
         }
 
-    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count):
+        
+                # we define a zobsrist table to use zobrist hashing in our playerAI
+    def initialize_zobrist_table(num_coordinates, num_different_piece_types): 
+        """we initiate the hash table as an array. Blue player has four different piece types: 
+        1: BLUE_SINGLES, 2: BLUE_DOUBLES, 3: BLUE_BLOCKED. Red player has the same.
+        so we have 6 piece types.
+        
+        Args:
+            num_coordinates (int): number of coordinates of the board. We have 64 coodinates
+            num_different_piece_types (int): numver of different pieces on the board.
+        Returns:
+            zobrist_table (array): zobrist table is implemented as a 2 dimensional array
+        """
+    
+        zobrist_table = [] # initiate list
+        # create 2 dimensional list for position and piece type
+        for coordinate in range(num_coordinates): 
+                zobrist_table.append([])
+                for piece_type in range(num_different_piece_types):
+                    zobrist_table[coordinate].append(random.getrandbits(num_coordinates)) # random 64 bit number generator
+                        
+        return zobrist_table
+
+    # initialising zobrist table with 6 different pieces
+    zobrist_table = initialize_zobrist_table(64, 6)  
+    
+        
+    def calculate_zobrist_hash(self):
+        """Calculate Zobrist hash value for the given board state
+
+        Args:
+            # NOT UP TO DATE board (Board): The current game board state
+            # NOT UP TO DATE turn (str): tells us whos turn it is in this state
+
+        Returns:
+            int: The Zobrist hash value for the given board state."""
+        
+        hash_value = 0
+        
+        for square in range(64):
+            # XOR the hash value with the Zobrist key for each occupied square
+            if self.board.BLUE_SINGLES & (1 << square): # we are using the shift operator here
+                hash_value ^= self.zobrist_table[square][1]  # Blue Single
+            if self.board.BLUE_DOUBLES & (1 << square):
+                hash_value ^= self.zobrist_table[square][2]  # Blue Double
+            if self.board.RED_SINGLES & (1 << square):
+                hash_value ^= self.zobrist_table[square][3]  # Red Single
+            if self.board.RED_DOUBLES & (1 << square):
+                hash_value ^= self.zobrist_table[square][4]  # Red Double
+            if self.board.BLUE_BLOCKED & (1 << square):
+                hash_value ^= self.zobrist_table[square][5]  # Blue Blocked
+            if self.board.RED_BLOCKED & (1 << square):
+                hash_value ^= self.zobrist_table[square][6]  # Red Blocked
+        
+        # # Include turn information in the hash
+        # if turn == "Blue":
+        #     hash_value ^= self.zobrist_table[64][0]  # Extra row for turn information
+        # else:
+        #     hash_value ^= self.zobrist_table[64][1]       
+        
+        return hash_value
+    
+    def update_zobrist_hash(self, move, old_hash):
+        """Update the Zobrist hash value after a move.
+
+        Args:
+            move (Move): The move that was made.
+            old_hash (int): The previous Zobrist hash value.
+
+        Returns:
+            int: The updated Zobrist hash value.
+        """
+        new_hash = old_hash
+        from_square = move.from_
+        to_square = move.to
+
+        # XOR out the old pieces from the hash
+        new_hash ^= self.zobrist_table[from_square][self.board_state[from_square]]
+        new_hash ^= self.zobrist_table[to_square][self.board_state[to_square]]
+
+        # XOR in the new pieces
+        new_hash ^= self.zobrist_table[from_square][0]  # Empty square after the move
+        new_hash ^= self.zobrist_table[to_square][self.board_state[from_square]]  # Piece moved to the new square
+
+        # update turn information 
+        #new_hash ^= self.zobrist_table[64][0] if self.board.turn == "Blue" else self.zobrist_table[64][1]
+
+
+        return new_hash
+    
+    
+    # implementing the transposition table
+    def transposition_table(self):
+
+        return 0        
+    
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, transposition_table={}):
         """
         Implements the alpha-beta pruning algorithm for game tree search.
 
@@ -380,6 +476,7 @@ class AIPlayer:
         - display (boolean):  indicating whether to display the board during the search.
         - cutoff (boolean): indicating whether to apply cutoff when alpha >= beta.
         - count (int): number of nodes visited during the search.
+        - transposition_table (dict): transpositional table to store move history 
 
         Returns:
         - best_value (float): The best value that can be achieved from the current game state.
@@ -389,7 +486,15 @@ class AIPlayer:
         
         if display:
             board.print_board()
-
+            
+        board_hash = self.calculate_zobrist_hash() # here we calculate the hash of the board by using our zobrist_hash method from Board class
+        
+        if board_hash in transposition_table: 
+            transposition_table_element = transposition_table[board_hash] # element of transposition table are board states
+            if transposition_table_element["depth"] >= depth: # check if element in TT is from deeper search level
+                return transposition_table_element["value"], transposition_table_element["move"], count # return value and best move from that game state 
+            
+        
         if board.is_game_over()[0]:
             return float('-inf') if maximizing_player else float('inf'), None, count
 
@@ -442,6 +547,9 @@ class AIPlayer:
                 beta = min(beta, value)
                 if beta <= alpha and cutoff:
                     break
+                
+                                
+        transposition_table[board_hash] = {"value": best_value, "depth": depth, "move": best_move} # put the evaluation of the game state into the TT
         return best_value, best_move, count
 
     def get_best_move(self, max_depth, display, cutoff):
@@ -457,6 +565,9 @@ class AIPlayer:
             str: The best move as a string (e.g. B2 - B3, for a move from position B2 to the position B3.)
 
         """
+        # initialise the transposition table
+        transposition_table = {}
+        
         isBlue = True if self.color == "Blue" else False
         best_move = None
         best_value = float('-inf') if self.color == "Blue" else float('inf')
@@ -467,7 +578,7 @@ class AIPlayer:
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
             startzeit = time.time()
-            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count)
+            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, transposition_table) # i newly added the transposition table here as arg
             print(move)
             print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
             count = countPerDepth
@@ -822,7 +933,13 @@ def main():
             else:
                 next_move = turn.get_random_move()
 
-            move = next_move
+            # move = next_move # this can't work, as we need move to be from Move class, not just a string
+            # convert next_move (string) to Move object first
+            from_square, to_square = next_move.upper().split('-')
+            from_coordinate = Coordinate[from_square]
+            to_coordinate = Coordinate[to_square]
+            # now we can create Move object
+            move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)  
 
             # Apply move
             response = board.apply_move(move)
