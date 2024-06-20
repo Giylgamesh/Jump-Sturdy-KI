@@ -333,10 +333,11 @@ class AIPlayer:
     needs to play the game.
     """
     
-    def __init__(self, color, board):
+    def __init__(self, color, board. zobrist_table):
         # Initialize AI components
         self.color = color
         self.board = board
+        self.zobrist_table = zobrist_table
 
         self.weights = {
             "bias": 1,
@@ -383,8 +384,10 @@ class AIPlayer:
             "friendly_double_under_attack": -4
         }
 
-        # we define a zobsrist table to use zobrist hashing in our playerAI
 
+
+        # NOTE: get_best_move() needs the zobrsit table for the alpha_beta search. I dont know yet, how to give the zobrist table to the get_best_move() in the client.py
+        # we define a zobsrist table to use zobrist hashing in our playerAI
     def initialize_zobrist_table(self, num_coordinates, num_different_piece_types):
         """we initiate the hash table as an array. Blue player has 3 different piece types: 
         1: BLUE_SINGLES, 2: BLUE_DOUBLES, 3: BLUE_BLOCKED. Red player has the same.
@@ -394,56 +397,94 @@ class AIPlayer:
             num_coordinates (int): number of coordinates of the board. We have 64 coodinates
             num_different_piece_types (int): numver of different pieces on the board.
         Returns:
-            zobrist_table (array): zobrist table is implemented as a 2 dimensional array
+            zobrist_table (array): zobrist table is implemented as a 2 dimensional array. 
+            zobrist_table = [[(rand_bitstring_for_coordinate_1), (rand_bitstring_for_piecetype_1), (rand_bitstring_for_piecetype_2)...], ..., ..., ]
+            
         """
 
         zobrist_table = []  # initiate list
         # create 2 dimensional list for position and piece type
         for coordinate in range(num_coordinates):
-            zobrist_table.append([])
+            zobrist_table.append([]) # random 64 bitstring for coordinate on board
             for piece_type in range(num_different_piece_types):
-                zobrist_table[coordinate].append(random.getrandbits(num_coordinates))  # random 64 bit number generator
-
+                zobrist_table[coordinate].append(random.getrandbits(64))  # random 64 bitstring for possible piece type on this coordinate
+        
+        # add on last position of zobrist_table if it's red players turn as a random 64 bitstring
+        red_players_turn = random.getrandbits(64)
+        zobrist_table.append(red_players_turn)
+        
         return zobrist_table
 
 
-    def calculate_zobrist_hash(self, zobrist_table):
-        """Calculate Zobrist hash value for the given board state
+    # def calculate_zobrist_hash(self, zobrist_table, num_coordinates, red_player_turn_bool):
+    #     """Calculate Zobrist hash value for the given board state
+
+    #     Args:
+    #         zobrist_table (Array)
+    #         # NOT UP TO DATE board (Board): The current game board state
+    #         # NOT UP TO DATE turn (str): tells us whos turn it is in this state
+
+    #     Returns:
+    #         int: The Zobrist hash value for the given board state."""
+
+    #     hash_value = 0
+
+    #     for square in range(num_coordinates):
+    #         # XOR the hash value with the Zobrist key for each occupied square
+    #         if self.board.BLUE_SINGLES & (1 << square):  # we are using the shift operator here
+    #             hash_value ^= zobrist_table[square][1]  # Blue Single
+    #         if self.board.BLUE_DOUBLES & (1 << square):
+    #             hash_value ^= zobrist_table[square][2]  # Blue Double
+    #         if self.board.BLUE_BLOCKED & (1 << square):
+    #             hash_value ^= zobrist_table[square][5]  # Blue Blocked
+    #         if self.board.RED_SINGLES & (1 << square):
+    #             hash_value ^= zobrist_table[square][3]  # Red Single
+    #         if self.board.RED_DOUBLES & (1 << square):
+    #             hash_value ^= zobrist_table[square][4]  # Red Double
+    #         if self.board.RED_BLOCKED & (1 << square):
+    #             hash_value ^= zobrist_table[square][6]  # Red Blocked
+
+    #     # Include turn information in the hash
+    #     if red_player_turn_bool == 0:
+    #         hash_value ^= zobrist_table[64][0]  # Extra row for turn information
+    #     else:
+    #         hash_value ^= zobrist_table[64][1]
+
+
+    #     return hash_value
+    
+    
+    def calculate_zobrist_hash(self, zobrist_table, num_coordinates, red_player_turn_bool, num_of_piece_types):
+        """Calculate the Zobrist hash for the current board state.
+
+        This method calculates the Zobrist hash for the current board state using the given Zobrist table.
+        The Zobrist hash is a unique value that represents the current board state and is used in board game AI algorithms.
 
         Args:
-            zobrist_table (Array)
-            # NOT UP TO DATE board (Board): The current game board state
-            # NOT UP TO DATE turn (str): tells us whos turn it is in this state
+            zobrist_table (list): The Zobrist table containing random bitstrings for each coordinate and piece type.
+            num_coordinates (int): The number of coordinates on the board.
+            red_player_turn_bool (bool): A boolean value indicating whether it is the red player's turn.
+            num_of_piece_types (int): The number of different piece types on the board.
 
         Returns:
-            int: The Zobrist hash value for the given board state."""
+            int: The calculated Zobrist hash for the current board state.
+        """
+        zobrist_hash = 0
+        for bitboard in [self.board.BLUE_SINGLES, self.board.BLUE_DOUBLES, self.board.BLUE_BLOCKED, self.board.RED_SINGLES, self.board.RED_DOUBLES, self.board.RED_BLOCKED]:
+            for coordinate in range(num_coordinates): # we have 64
+                for piece_type in range (num_of_piece_types): # we have 6 and they go in the order like in the bitboard variable
+                    # coordinate in bitboard is either 1 oder 0 and it decides with multiplication
+                    # if the piece type is standing on this coordinate
+                    # if  yes: (bitboard[coordinate] = 1): the random bitstring from the zobrist_table for this coordinate and for this piece type is going into the hash calculation
+                    # if no: (bitboard[coordinate] = 0): bitsting in zobrsit table becomes a 0 bit and gets ignored in XOR operation
+                    # either way, the random bitstring for the empty coordinate without any pieces on it goes into hash calculation 
+                    zobrist_hash ^= zobrist_table[coordinate] ^ (bitboard[coordinate] * zobrist_table[coordinate][piece_type])
 
-        hash_value = 0
+        if red_player_turn_bool == 1:
+            zobrist_hash ^= zobrist_table[-1] # get last element of zobrist table, which says, that it's the red players turn in this board state
+        return zobrist_hash
 
-        for square in range(64):
-            # XOR the hash value with the Zobrist key for each occupied square
-            if self.board.BLUE_SINGLES & (1 << square):  # we are using the shift operator here
-                hash_value ^= zobrist_table[square][1]  # Blue Single
-            if self.board.BLUE_DOUBLES & (1 << square):
-                hash_value ^= zobrist_table[square][2]  # Blue Double
-            if self.board.RED_SINGLES & (1 << square):
-                hash_value ^= zobrist_table[square][3]  # Red Single
-            if self.board.RED_DOUBLES & (1 << square):
-                hash_value ^= zobrist_table[square][4]  # Red Double
-            if self.board.BLUE_BLOCKED & (1 << square):
-                hash_value ^= zobrist_table[square][5]  # Blue Blocked
-            if self.board.RED_BLOCKED & (1 << square):
-                hash_value ^= zobrist_table[square][6]  # Red Blocked
-
-        # # Include turn information in the hash
-        # if turn == "Blue":
-        #     hash_value ^= self.zobrist_table[64][0]  # Extra row for turn information
-        # else:
-        #     hash_value ^= self.zobrist_table[64][1]       
-
-        return hash_value
-
-    def update_zobrist_hash(self, move, old_hash):
+    def update_zobrist_hash(self, move, old_hash, zobrist_table):
         """Update the Zobrist hash value after a move.
 
         Args:
@@ -462,13 +503,13 @@ class AIPlayer:
         
         
         # XOR out the old pieces from the hash
-        # this ^= operation does XOR
-        new_hash ^= self.zobrist_table[from_square][self.board_state[from_square]]
-        new_hash ^= self.zobrist_table[to_square][self.board_state[to_square]]
+        # this ^ operation does XOR
+        new_hash ^= zobrist_table[from_square][self.board_state[from_square]]
+        new_hash ^= zobrist_table[to_square][self.board_state[to_square]]
 
         # XOR in the new pieces
-        new_hash ^= self.zobrist_table[from_square][0]  # Empty square after the move
-        new_hash ^= self.zobrist_table[to_square][self.board_state[from_square]]  # Piece moved to the new square
+        new_hash ^= zobrist_table[from_square][0]  # Empty square after the move
+        new_hash ^= zobrist_table[to_square][self.board_state[from_square]]  # Piece moved to the new square
 
         # update turn information 
         # new_hash ^= self.zobrist_table[64][0] if self.board.turn == "Blue" else self.zobrist_table[64][1]
@@ -476,7 +517,8 @@ class AIPlayer:
         return new_hash
     
     # implementing the transposition table
-    def initialise_transposition_table(board_state, alpha_value=int, beta_value=int, player_color=str, best_move=str, board_score=float):
+    
+    def initialise_transposition_table(self,z_hash, board_state, alpha_value=int, beta_value=int, player_color=str, best_move=str, board_score=float):
         """
         Initializes the transposition table with a single entry.
 
@@ -492,41 +534,33 @@ class AIPlayer:
             list: The transposition table with the initialized entry.
         """
         transposition_table = []
-        transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
-        return transposition_table
-
-    def initialise_transposition_table(board_state, alpha_value=int, beta_value=int, player_color=str, best_move=str, board_score=int):
-        """_summary_
-
-        Args:
-            board_state (_type_): _description_
-            alpha_value (_type_, optional): _description_. Defaults to int.
-            beta_value (_type_, optional): _description_. Defaults to int.
-            player_color (_type_, optional): _description_. Defaults to str.
-            best_move (_type_, optional): _description_. Defaults to str.
-            board_score (_type_, optional): _description_. Defaults to int.
-
-        Returns:
-            _type_: _description_
-        """
-        transposition_table = []
-        transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
+        transposition_table.append([board_state, z_hash, alpha_value, beta_value, player_color, best_move, board_score])
         return transposition_table
 
 
 
-    def update_transposition_table(transposition_table, board_state, alpha_value, beta_value, player_color, best_move, board_score):
+    def update_transposition_table(self, transposition_table, board_state, alpha_value, beta_value, player_color, best_move, board_score):
         """add the new transposition table entry as last element of the transposition table"""
         return transposition_table.append([board_state, alpha_value, beta_value, player_color, best_move, board_score])
 
 
-    def search_transposition_table(transposition_table, board_state):
+    def search_transposition_table(self, transposition_table, board_state):
+        """Searches for a specific board state in the transposition table to check if it already exists.
+
+        Args:
+            transposition_table (list): The transposition table to search in.
+            board_state (object): The board state to search for.
+
+        Returns:
+            tuple: A tuple containing the entry found in the transposition table and its index.
+                   If the board state is not found, returns (None, -1).
+        """
         for i, entry in enumerate(transposition_table):
             if entry[0] == board_state:
                 return entry, i
         return None, -1
 
-    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, transposition_table):
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, transposition_table, zobrist_table):
         """
         Implements the alpha-beta pruning algorithm for game tree search.
 
@@ -549,9 +583,13 @@ class AIPlayer:
 
         if display:
             board.print_board()
-
-        board_hash = self.calculate_zobrist_hash()  # here we calculate the hash of the board by using our
-        # zobrist_hash method from Board class
+            
+        # calculate the zobrist hash for the current board state
+        num_coordinates=64
+        red_player_turn_bool=0
+        num_of_piece_types=6
+        board_hash = self.calculate_zobrist_hash(zobrist_table, num_coordinates, red_player_turn_bool, num_of_piece_types) 
+        
 
         if board_hash in transposition_table:
             transposition_table_element = transposition_table[
@@ -593,7 +631,7 @@ class AIPlayer:
                 print("BP")
                 board.print_board()
             assert "Error" not in board.apply_move(move)
-            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff,
+            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, transposition_table, zobrist_table,
                                                 count + 1)
             if display:
                 move_score_list.append((move, value))
@@ -646,7 +684,7 @@ class AIPlayer:
             startzeit = time.time()
             value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue,
                                                             display, cutoff, count,
-                                                            transposition_table)  # I newly added the transposition
+                                                            transposition_table, zobrist_table)  
             # table here as arg
             print(move)
             print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
