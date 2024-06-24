@@ -2,8 +2,8 @@ import unittest
 import time
 import random
 
-from JumpSturdy.ai.player import AIPlayer
-from JumpSturdy.game_state. board import Board
+from ai.player import AIPlayer
+from game_state. board import Board
 
 def create_random_fen():
     fen = ""
@@ -150,7 +150,7 @@ def text_minMax(fen):
     board.fen_notation_into_bb(fen)
     board.print_board()
     blue_player = AIPlayer("Blue", board)
-    best_move = blue_player.get_best_move(4, False, False)
+    best_move = blue_player.get_best_move(4, False, False, zobrist_table)
     print(best_move)
 
 def text_alpha_beta(fen):
@@ -159,7 +159,7 @@ def text_alpha_beta(fen):
     board.fen_notation_into_bb(fen)
     board.print_board()
     blue_player = AIPlayer("Blue", board)
-    best_move = blue_player.get_best_move(4, False, True)
+    best_move = blue_player.get_best_move(4, False, True, zobrist_table)
     print(best_move)
 
 def test_problemstellung(fen,redFirst:int):
@@ -196,9 +196,9 @@ def test_problemstellung(fen,redFirst:int):
         # Get next move from the current player
         if turn == blue_player:
             # next_move = board.ask_for_move()
-            next_move = turn.get_best_move(4, False, False)
+            next_move = turn.get_best_move(4, False, False, zobrist_table)
         else:
-            next_move = turn.get_best_move(4, False, False)
+            next_move = turn.get_best_move(4, False, False, zobrist_table)
 
         move = next_move
 
@@ -255,8 +255,8 @@ class TestAI(unittest.TestCase):
         blue_player = AIPlayer("Blue",board)
         print(red_player.get_score(board))
         print(board.get_legal_moves_list(red_player.get_all_selected_moves()))
-        best_move = red_player.get_best_move(1,False,False)
-        best_move_blue = blue_player.get_best_move(1,False,False)
+        best_move = red_player.get_best_move(1,False,False, zobrist_table)
+        best_move_blue = blue_player.get_best_move(1,False,False, zobrist_table)
 
     def test_bewertungsfunktion_in_depth_0(self):
         board = Board()
@@ -265,7 +265,7 @@ class TestAI(unittest.TestCase):
         board.fen_notation_into_bb(fen)
         board.print_board()
         blue_player = AIPlayer("Blue", board)
-        best_move = blue_player.get_best_move(1, False, False)
+        best_move = blue_player.get_best_move(1, False, False, zobrist_table)
         print(best_move)
 
     def test_compare_bewertungsfunktion_in_depth_0(self):
@@ -274,11 +274,11 @@ class TestAI(unittest.TestCase):
         board.print_board()
         blue_player = AIPlayer("Blue", board)
         start = time.time()
-        best_move = blue_player.get_best_move(1, False, False)
+        best_move = blue_player.get_best_move(1, False, False, zobrist_table)
         print("Gesamtlaufzeit " + str((time.time() - start) * 1000)+ "ms")
         print(best_move)
         start = time.time()
-        best_move_from_ai_2 = blue_player.get_best_move(1, False, False)
+        best_move_from_ai_2 = blue_player.get_best_move(1, False, False, zobrist_table)
         print("Gesamtlaufzeit " + str((time.time() - start) * 1000)+ "ms")
         print(best_move_from_ai_2)
 
@@ -290,11 +290,11 @@ class TestAI(unittest.TestCase):
         blue_player = AIPlayer("Blue", board)
         red_player = AIPlayer("Red", board)
         start_ai_1 = time.time()
-        best_move = blue_player.get_best_move(1, False, False)
+        best_move = blue_player.get_best_move(1, False, False, zobrist_table)
         print("Gesamtlaufzeit " + str((time.time() - start_ai_1) * 1000)+ "ms")
         print(best_move)
         start_ai_2 = time.time()
-        best_move_from_ai_2 = red_player.get_best_move(1, False, False)
+        best_move_from_ai_2 = red_player.get_best_move(1, False, False, zobrist_table)
         print("Gesamtlaufzeit " + str((time.time() - start_ai_2) * 1000)+ "ms")
         print(best_move_from_ai_2)
 
@@ -305,7 +305,7 @@ class TestAI(unittest.TestCase):
             board.fen_notation_into_bb(fen)
             board.print_board()
             blue_player = AIPlayer("Blue", board)
-            best_move = blue_player.get_best_move(2, False, False)
+            best_move = blue_player.get_best_move(2, False, False, zobrist_table)
             print(best_move)
     def test_minMax_fen_1(self):
         text_minMax("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")

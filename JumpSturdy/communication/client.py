@@ -1,7 +1,7 @@
-import pygame
 import json
-from network import Network
-from JumpSturdy.ai.player import AIPlayer
+import pygame
+from communication.network import Network
+from ai.player import AIPlayer
 from JumpSturdy.game_state. board import Board
 pygame.font.init()
 
@@ -41,7 +41,7 @@ def main():
                 board.fen_notation_into_bb(game["board"].split(" ")[0])
                 board.print_board()
                 ai_player = AIPlayer("Red", board)
-                #change to any input you like. This one is just console input. Change it here to respond with your Ai's answer. 
+                #change to any input you like. This one is just console input. Change it here to respond with your Ai's answer.
                 #Answer must have format: start-end like E7-F7
                 i = ai_player.get_best_move(2, False, True)
                 print(i)

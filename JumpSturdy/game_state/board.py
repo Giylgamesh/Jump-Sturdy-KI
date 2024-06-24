@@ -1,6 +1,7 @@
 from enum import Enum
 import os
 from random import choice
+import random
 import copy
 
 def there_is(bitboard, n):
@@ -233,6 +234,9 @@ class Board:
         self.RED_BLOCKED = 0b0000000000000000000000000000000000000000000000000000000000000000
         self.last_state = None
         self.actual_state = self.capture_state()
+        self.zobrist_table = self.initialize_zobrist_table(64, 6)
+        self.board_hash = 0
+
         
     def __copy__(self):
         # Create a new instance of the class
@@ -763,7 +767,8 @@ class Board:
                 return "Error: Could not find the piece"
         else:
             return "Error: Unknown player"
-
+        
+            
     def undo_move(self):
         # Undo last move from the board
         # Check if there is a move to undo
@@ -988,7 +993,100 @@ class Board:
         new_board.actual_state = self.actual_state
         return new_board
 
-  
+    # zobrsit hashing
+    def initialize_zobrist_table(self, num_coordinates=int(), num_different_piece_types=int()):
+        """we initiate the hash table as an array. Blue player has 3 different piece types: 
+        1: BLUE_SINGLES, 2: BLUE_DOUBLES, 3: BLUE_BLOCKED. Red player has the same.
+        so we have 6 piece types.
+        
+        Args:
+            num_coordinates (int): number of coordinates of the board. We have 64 coodinates
+            num_different_piece_types (int): numver of different pieces on the board.
+        Returns:
+            zobrist_table (array): zobrist table is implemented as a 2 dimensional array. 
+            zobrist_table = [[(rand_bitstring_for_coordinate_1), (rand_bitstring_for_piecetype_1), (rand_bitstring_for_piecetype_2)...], ..., ..., ]
+            
+        """
+
+        zobrist_table = []  # initiate list
+        # create 2 dimensional list for position and piece type
+        for coordinate in range(num_coordinates):
+            zobrist_table.append([]) # random 64 bitstring for coordinate on board
+            for piece_type in range(num_different_piece_types):
+                zobrist_table[coordinate].append(random.getrandbits(64))  # random 64 bitstring for possible piece type on this coordinate
+        
+        # add on last position of zobrist_table if it's red players turn as a random 64 bitstring
+        max_players_turn = random.getrandbits(64)
+        zobrist_table.append(max_players_turn)
+        
+        return zobrist_table
+
+    def calculate_zobrist_hash(self, num_coordinates, max_players_turn):
+        """Calculate the Zobrist hash for the current board state.
+
+        This method calculates the Zobrist hash for the current board state using the given Zobrist table.
+        The Zobrist hash is a unique value that represents the current board state and is used in board game AI algorithms.
+
+        Args:
+            zobrist_table (list): Zobrist table containing random bitstrings for each coordinate and piece type
+            num_coordinates (int):number of coordinates on the board
+            max_players_turn (bool): boolean value indicating whether it is the red player's turn
+            num_of_piece_types (int): number of different piece types on the board
+
+        Returns:
+            int: calculated Zobrist hash for the current board state.
+        """
+
+        zobrist_hash = 0
+        for i, bitboard in enumerate([
+            self.BLUE_SINGLES, self.BLUE_DOUBLES, self.BLUE_BLOCKED,
+            self.RED_SINGLES, self.RED_DOUBLES, self.RED_BLOCKED
+        ]):
+            for square in range(num_coordinates):
+                if bitboard & (1 << square):  # Check if bit is set (piece present)
+                    zobrist_hash ^= self.zobrist_table[square][i]
+
+        if max_players_turn:
+            zobrist_hash ^= self.zobrist_table[-1]
+        return zobrist_hash
+
+    def update_zobrist_hash(self, move, old_hash, max_players_turn):
+        """Update the Zobrist hash value after a move.
+
+        Args:
+            move (Move): The move that was made.
+            old_hash (int): The previous Zobrist hash value.
+
+        Returns:
+            int: The updated Zobrist hash value.
+        """
+
+        new_hash = old_hash
+
+        # Get piece type from the "from_square"
+        piece_type = 0 
+        for i, bitboard in enumerate([
+            self.BLUE_SINGLES, self.BLUE_DOUBLES, self.BLUE_BLOCKED,
+            self.RED_SINGLES, self.RED_DOUBLES, self.RED_BLOCKED
+        ]):
+            if bitboard & (1 << move.from_):
+                piece_type = i
+                break
+
+        # XOR out the old piece
+        new_hash ^= self.zobrist_table[move.from_][piece_type]
+
+        # XOR in the new piece
+        new_hash ^= self.zobrist_table[move.to][piece_type]
+
+        # Update turn information
+        if max_players_turn:
+            new_hash ^= self.zobrist_table[-1]
+
+
+        return new_hash
+
+
 
 class Move:
     def __init__(self, player, fromm, to):
