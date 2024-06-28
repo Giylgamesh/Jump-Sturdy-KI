@@ -3,8 +3,8 @@ import random
 import math
 import time
 from collections import deque
-from game_state.board import Board, Coordinate, Move
-from ai.transposition_table import TranspositionTable
+from JumpSturdy.game_state.board import Board, Coordinate, Move
+from JumpSturdy.ai.transposition_table import TranspositionTable
 
 def value_iteration(blue_player, red_player, board, learning_rate=0.1, discount_factor=0.95):
     """
