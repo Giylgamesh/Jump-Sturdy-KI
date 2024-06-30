@@ -333,10 +333,12 @@ class AIPlayer:
     needs to play the game.
     """
     
-    def __init__(self, color, board):
+    def __init__(self, color, board, time, turn):
         # Initialize AI components
         self.color = color
         self.board = board
+        self.time = time
+        self.turn = turn
         self.transposition_table = TranspositionTable()
 
 
@@ -432,7 +434,7 @@ class AIPlayer:
     #             return entry, i
     #     return None, -1
 
-    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count):
+    def alpha_beta(self, board, depth, alpha, beta, maximizing_player, display, cutoff, count, start_time,limit_time):
         """
         Implements the alpha-beta pruning algorithm for game tree search.
 
@@ -451,7 +453,8 @@ class AIPlayer:
         - best_move (String): The best move to make from the current game state.
         - count (int): The updated number of nodes visited during the search.
         """
-
+        if time.time() - start_time >= limit_time:
+            raise TimeoutError("Time limit exceeded")
         if display:
             board.print_board()
             
@@ -502,7 +505,7 @@ class AIPlayer:
                 print("BP")
                 board.print_board()
             assert "Error" not in board.apply_move(move)
-            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count + 1)
+            value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count + 1, start_time,limit_time)
             if display:
                 move_score_list.append((move, value))
                 print("BP")
@@ -525,7 +528,38 @@ class AIPlayer:
         self.transposition_table.put(board_hash , best_value, depth, best_move, alpha, beta) # new entry in ttable
         return best_value, best_move, count
 
-    def get_best_move(self, max_depth, display, cutoff):
+    def get_best_move_through_time(self):
+        max_time = 1500
+        max_depth = 1200
+        
+        if self.turn<5:
+            max_depth = 100
+            max_time = 1000
+        if self.turn>=5 and self.turn<25:
+            max_depth = 1000
+            max_time = 2000
+        if self.turn>=25 and self.turn<45:
+            max_depth= 1500
+            max_time=4000
+        if self.turn>=45 and self.turn<60:
+            max_depth= 1000
+            max_time = 2000
+        if self.turn>=60:
+            max_depth= 500
+            max_time = 1000
+        
+        if self.time<=2000 and self.time>500:
+            max_time = 100
+            max_depth=25
+        if self.time<=500:
+            max_depth = 1
+        
+        print(self.turn)
+        print(max_depth)
+        best_move = self.get_best_move(max_depth,False,True, max_time)
+        return best_move
+
+    def get_best_move(self, max_depth, display, cutoff, limit_time):
         """
         Finds the best move for the player using the alpha-beta pruning algorithm
 
@@ -543,30 +577,33 @@ class AIPlayer:
         best_value = float('-inf') if self.color == "Blue" else float('inf')
         count = 1
         prev_count = count
-        print(f"Tiefe: 0 und Anzahl Zustände: 1")
-        start = time.time()
+        #print(f"Tiefe: 0 und Anzahl Zustände: 1")
+        start_time = time.time()
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
-            startzeit = time.time()
-            value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count)
-
-            print(move)
-            print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
-            count = countPerDepth
-            print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
-            prev_count = count
+         #   startzeit = time.time()
+            try:
+                value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, start_time,limit_time)
+                count = countPerDepth
+                prev_count = count
+            except TimeoutError:
+                break
+          #  print(move)
+          #  print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
+            
+          #  print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
             if isBlue:
                 if value > best_value:
                     best_value, best_move = value, move
             else:
                 if value < best_value:
                     best_value, best_move = value, move
-            print(best_move)
+         #   print(best_move)
             if cutoff == True:
                 if value == float('inf'):
-                    return move
-        print(f"Anzahl durchlaufener Zustände: {count}")
-        print("Gesamtlaufzeit: " + str((time.time() - start) * 1000) + "ms")
+                    return str(move)[-5:]
+      #  print(f"Anzahl durchlaufener Zustände: {count}")
+        #print("Gesamtlaufzeit: " + str((time.time() - start) * 1000) + "ms")
         best_move = str(best_move)[-5:]
         return best_move
 
