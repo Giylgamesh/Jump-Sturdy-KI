@@ -479,7 +479,6 @@ class AIPlayer:
 
         best_value = float('-inf') if maximizing_player else float('inf')
         best_move = None
-        # put current zobrist hash with current board state into transposition table
 
         color = "Blue" if maximizing_player else "Red"
         possible_moves = board.get_legal_moves_moves(
@@ -505,6 +504,8 @@ class AIPlayer:
                 print("BP")
                 board.print_board()
             assert "Error" not in board.apply_move(move)
+            # update zobrist hash value
+            # board.board_hash = board.update_zobrist_hash(move, board.board_hash, maximizing_player)
             value, _, count = self.alpha_beta(board, depth - 1, alpha, beta, not maximizing_player, display, cutoff, count + 1, start_time,limit_time)
             if display:
                 move_score_list.append((move, value))

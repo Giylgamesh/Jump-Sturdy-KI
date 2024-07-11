@@ -34,16 +34,13 @@ class TranspositionTable():
         return self.table[hash_value]
     
     def put(self, hash_value, score, depth, best_move, alpha, beta):
-        """
-        puts an entry in the transposition table with the given hash value
         If transposition table is full (max size) --> removes least recently used entry
 
         Args:
             hash_value (64-bit): hash value of the current game state
             score (float): The score associated with this game state.
             depth (int): The depth at which the board state was evaluated.
-            best_move (str): The best move found for that game state.
-        """
+        # NOTE no colision avoidance yet. Maybe we need one
         if len(self.table) >= self.size: # check if ttable max size reached
             self.table.popitem(last=False) # if True -> remove least recently used item from ttable
         self.table[hash_value] = (score, depth, best_move, alpha, beta) # add new entry in ttable
