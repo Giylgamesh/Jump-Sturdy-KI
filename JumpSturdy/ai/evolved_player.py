@@ -328,64 +328,19 @@ def normalize_weights(weights):
     return normalized_weights
 
 
-class AIPlayer:
+class EvolvedAIPlayer:
     """Our AI Player class. It includes all the actions the AI Player 
     needs to play the game.
     """
     
-    def __init__(self, color, board, time, turn):
+    def __init__(self, color, board, time, turn, weights):
         # Initialize AI components
         self.color = color
         self.board = board
         self.time = time
         self.turn = turn
         self.transposition_table = TranspositionTable()
-
-
-        self.weights = {
-            "bias": 1,
-            "friendly_singles_value": 1,
-            "friendly_doubles_value": 3,
-            "friendly_material_score": 2,
-            "enemy_singles_value": -1,
-            "enemy_doubles_value": -3,
-            "enemy_material_score": -2,
-
-            "friendly_most_advanced_singles": 1,
-            "friendly_most_advanced_doubles": 2,
-            "enemy_most_advanced_singles": -2,
-            "enemy_most_advanced_doubles": -2,
-            "friendly_advancement_of_singles": 5,
-            "friendly_advancement_of_doubles": 5,
-            "enemy_advancement_of_singles": -2,
-            "enemy_advancement_of_doubles": -2,
-
-            "control_of_center": 2,
-            "control_of_edges": 2,
-
-            "friendly_single_in_edges": 3,
-            "friendly_double_in_edges": 1,
-            "friendly_single_in_center": 2,
-            "friendly_double_in_center": 2,
-            "enemy_single_in_edges": -3,
-            "enemy_double_in_edges": -1,
-            "enemy_single_in_center": -2,
-            "enemy_double_in_center": -1,
-
-            "friendly_double_in_back_corner": -1,
-            "friendly_doubles_in_line": 4,
-            "friendly_single_double_in_line": 5,
-            "friendly_singles_in_line": 1,
-            "friendly_piece_is_last": 20,
-
-            "friendly_density": 3,
-            "friendly_mobility": 1,
-            "enemy_density": -1,
-            "enemy_mobility": -3,
-
-            "friendly_single_under_attack": -4,
-            "friendly_double_under_attack": -4
-        }
+        self.weights = weights
 
 
 
@@ -554,8 +509,8 @@ class AIPlayer:
         if self.time<=500:
             max_depth = 1
         
-        print(self.turn)
-        print(max_depth)
+        #print(self.turn)
+        #print(max_depth)
         best_move = self.get_best_move(max_depth,False,True, max_time)
         return best_move
 
@@ -899,96 +854,270 @@ class AIPlayer:
 
 def main():
     """
+    https://www.chessprogramming.org/Stockfish%27s_Tuning_Method
     This is the main method that sets up the game board and players, 
     and then simulates a game between two AI players. Here we give the board a FEN-String to generate the initial board state.
     This allows us to start the game from any state (e.g. Game-start, early-game, mid-game, late-game)
     """
-    board = Board()
-    # board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
-    # board.fen_notation_into_bb("b0b0b0b02/b0b01b01b0b01/5r02/1b02r03/b01r02r02/3r03r0/2rb1rr3/1r03r0")
-    board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
-    blue_player = AIPlayer("Blue", board)
-    red_player = AIPlayer("Red", board)
-    
-    # Value-Iteration (didn't work)
-    # new_weights = value_iteration(blue_player, red_player, board)
+    weights = {
+            "bias": 1,
+            "friendly_singles_value": 1,
+            "friendly_doubles_value": 3,
+            "friendly_material_score": 2,
+            "enemy_singles_value": -1,
+            "enemy_doubles_value": -3,
+            "enemy_material_score": -2,
 
+            "friendly_most_advanced_singles": 1,
+            "friendly_most_advanced_doubles": 2,
+            "enemy_most_advanced_singles": -2,
+            "enemy_most_advanced_doubles": -2,
+            "friendly_advancement_of_singles": 5,
+            "friendly_advancement_of_doubles": 5,
+            "enemy_advancement_of_singles": -2,
+            "enemy_advancement_of_doubles": -2,
+
+            "control_of_center": 2,
+            "control_of_edges": 2,
+
+            "friendly_single_in_edges": 3,
+            "friendly_double_in_edges": 1,
+            "friendly_single_in_center": 2,
+            "friendly_double_in_center": 2,
+            "enemy_single_in_edges": -3,
+            "enemy_double_in_edges": -1,
+            "enemy_single_in_center": -2,
+            "enemy_double_in_center": -1,
+
+            "friendly_double_in_back_corner": -1,
+            "friendly_doubles_in_line": 4,
+            "friendly_single_double_in_line": 5,
+            "friendly_singles_in_line": 1,
+            "friendly_piece_is_last": 20,
+
+            "friendly_density": 3,
+            "friendly_mobility": 1,
+            "enemy_density": -1,
+            "enemy_mobility": -3,
+
+            "friendly_single_under_attack": -4,
+            "friendly_double_under_attack": -4
+        }
+    
     # Initialize loop control variables
-    i = 0
-    N = 1
-    total = 0
-    winner = 0
+    N = 10000
 
     # Loop through each game iteration
     for j in range(N):
-        # Simulate game moves until game over
-        last_3_moves = deque(maxlen=3)
+        friendly_singles_value_delta = random.uniform(0, 0.2)
+        friendly_doubles_value_delta = random.uniform(0, 0.6)
+        friendly_material_score_delta= random.uniform(0, 0.4)
+        enemy_singles_value_delta= random.uniform(-0.2, 0)
+        enemy_doubles_value_delta= random.uniform(-0.6, 0)
+        enemy_material_score_delta= random.uniform(-0.4, 0)
+
+        friendly_most_advanced_singles_delta= random.uniform(0, 0.2)
+        friendly_most_advanced_doubles_delta= random.uniform(0, 0.4)
+        enemy_most_advanced_singles_delta= random.uniform(-0.4, 0)
+        enemy_most_advanced_doubles_delta= random.uniform(-0.4, 0)
+        friendly_advancement_of_singles_delta= random.uniform(0, 1)
+        friendly_advancement_of_doubles_delta= random.uniform(0, 1)
+        enemy_advancement_of_singles_delta= random.uniform(-0.4, 0)
+        enemy_advancement_of_doubles_delta= random.uniform(-0.4, 0)
+
+        control_of_center_delta= random.uniform(0, 0.4)
+        control_of_edges_delta= random.uniform(0, 0.4)
+
+        friendly_single_in_edges_delta= random.uniform(0, 0.6)
+        friendly_double_in_edges_delta= random.uniform(0, 0.2)
+        friendly_single_in_center_delta= random.uniform(0, 0.4)
+        friendly_double_in_center_delta= random.uniform(0, 0.4)
+        enemy_single_in_edges_delta= random.uniform(-0.6, 0)
+        enemy_double_in_edges_delta= random.uniform(-0.2, 0)
+        enemy_single_in_center_delta= random.uniform(-0.4, 0)
+        enemy_double_in_center_delta= random.uniform(-0.2, 0)
+
+        friendly_double_in_back_corner_delta= random.uniform(-0.2, 0)
+        friendly_doubles_in_line_delta= random.uniform(0, 0.8)
+        friendly_single_double_in_line_delta= random.uniform(0, 1)
+        friendly_singles_in_line_delta= random.uniform(0, 0.2)
+        friendly_piece_is_last_delta= random.uniform(0, 4)
+
+        friendly_density_delta= random.uniform(0, 0.6)
+        friendly_mobility_delta= random.uniform(0, 0.2)
+        enemy_density_delta= random.uniform(-0.2, 0)
+        enemy_mobility_delta= random.uniform(-0.6, 0)
+
+        friendly_single_under_attack_delta= random.uniform(-0.8, 0)
+        friendly_double_under_attack_delta= random.uniform(-0.8, 0)
+
+        red_weight={
+            "bias": weights["bias"],
+            "friendly_singles_value": weights["friendly_singles_value"] + friendly_singles_value_delta,
+            "friendly_doubles_value": weights["friendly_doubles_value"] + friendly_doubles_value_delta,
+            "friendly_material_score": weights["friendly_material_score"] + friendly_material_score_delta,
+            "enemy_singles_value": weights["enemy_singles_value"] + enemy_singles_value_delta,
+            "enemy_doubles_value": weights["enemy_doubles_value"] + enemy_doubles_value_delta,
+            "enemy_material_score": weights["enemy_material_score"] + enemy_material_score_delta,
+
+            "friendly_most_advanced_singles": weights["friendly_most_advanced_singles"] + friendly_most_advanced_singles_delta,
+            "friendly_most_advanced_doubles": weights["friendly_most_advanced_doubles"] + friendly_most_advanced_doubles_delta,
+            "enemy_most_advanced_singles": weights["enemy_most_advanced_singles"] + enemy_most_advanced_singles_delta,
+            "enemy_most_advanced_doubles": weights["enemy_most_advanced_doubles"] + enemy_most_advanced_doubles_delta,
+            "friendly_advancement_of_singles": weights["friendly_advancement_of_singles"] + friendly_advancement_of_singles_delta,
+            "friendly_advancement_of_doubles": weights["friendly_advancement_of_doubles"] + friendly_advancement_of_doubles_delta,
+            "enemy_advancement_of_singles": weights["enemy_advancement_of_singles"] + enemy_advancement_of_singles_delta,
+            "enemy_advancement_of_doubles": weights["enemy_advancement_of_doubles"] + enemy_advancement_of_doubles_delta,
+
+            "control_of_center": weights["control_of_center"] + control_of_center_delta,
+            "control_of_edges": weights["control_of_edges"] + control_of_edges_delta,
+
+            "friendly_single_in_edges": weights["friendly_single_in_edges"] + friendly_single_in_edges_delta,
+            "friendly_double_in_edges": weights["friendly_double_in_edges"] + friendly_double_in_edges_delta,
+            "friendly_single_in_center": weights["friendly_single_in_center"] + friendly_single_in_center_delta,
+            "friendly_double_in_center": weights["friendly_double_in_center"] + friendly_double_in_center_delta,
+            "enemy_single_in_edges": weights["enemy_single_in_edges"] + enemy_single_in_edges_delta,
+            "enemy_double_in_edges": weights["enemy_double_in_edges"] + enemy_double_in_edges_delta,
+            "enemy_single_in_center": weights["enemy_single_in_center"] + enemy_single_in_center_delta,
+            "enemy_double_in_center": weights["enemy_double_in_center"] + enemy_double_in_center_delta,
+
+            "friendly_double_in_back_corner": weights["friendly_double_in_back_corner"] + friendly_double_in_back_corner_delta,
+            "friendly_doubles_in_line": weights["friendly_doubles_in_line"] + friendly_doubles_in_line_delta,
+            "friendly_single_double_in_line": weights["friendly_single_double_in_line"] + friendly_single_double_in_line_delta,
+            "friendly_singles_in_line": weights["friendly_singles_in_line"] + friendly_singles_in_line_delta,
+            "friendly_piece_is_last": weights["friendly_piece_is_last"] + friendly_piece_is_last_delta,
+
+            "friendly_density": weights["friendly_density"] + friendly_density_delta,
+            "friendly_mobility": weights["friendly_mobility"] + friendly_mobility_delta,
+            "enemy_density": weights["enemy_density"] + enemy_density_delta,
+            "enemy_mobility": weights["enemy_mobility"] + enemy_mobility_delta,
+
+            "friendly_single_under_attack": weights["friendly_single_under_attack"] + friendly_single_under_attack_delta,
+            "friendly_double_under_attack": weights["friendly_double_under_attack"] + friendly_double_under_attack_delta
+        }
+        blue_weight={
+            "bias": weights["bias"],
+            "friendly_singles_value": weights["friendly_singles_value"] - friendly_singles_value_delta,
+            "friendly_doubles_value": weights["friendly_doubles_value"] - friendly_doubles_value_delta,
+            "friendly_material_score": weights["friendly_material_score"] - friendly_material_score_delta,
+            "enemy_singles_value": weights["enemy_singles_value"] - enemy_singles_value_delta,
+            "enemy_doubles_value": weights["enemy_doubles_value"] - enemy_doubles_value_delta,
+            "enemy_material_score": weights["enemy_material_score"] - enemy_material_score_delta,
+
+            "friendly_most_advanced_singles": weights["friendly_most_advanced_singles"] - friendly_most_advanced_singles_delta,
+            "friendly_most_advanced_doubles": weights["friendly_most_advanced_doubles"] - friendly_most_advanced_doubles_delta,
+            "enemy_most_advanced_singles": weights["enemy_most_advanced_singles"] - enemy_most_advanced_singles_delta,
+            "enemy_most_advanced_doubles": weights["enemy_most_advanced_doubles"] - enemy_most_advanced_doubles_delta,
+            "friendly_advancement_of_singles": weights["friendly_advancement_of_singles"] - friendly_advancement_of_singles_delta,
+            "friendly_advancement_of_doubles": weights["friendly_advancement_of_doubles"] - friendly_advancement_of_doubles_delta,
+            "enemy_advancement_of_singles": weights["enemy_advancement_of_singles"] - enemy_advancement_of_singles_delta,
+            "enemy_advancement_of_doubles": weights["enemy_advancement_of_doubles"] - enemy_advancement_of_doubles_delta,
+
+            "control_of_center": weights["control_of_center"] - control_of_center_delta,
+            "control_of_edges": weights["control_of_edges"] - control_of_edges_delta,
+
+            "friendly_single_in_edges": weights["friendly_single_in_edges"] - friendly_single_in_edges_delta,
+            "friendly_double_in_edges": weights["friendly_double_in_edges"] - friendly_double_in_edges_delta,
+            "friendly_single_in_center": weights["friendly_single_in_center"] - friendly_single_in_center_delta,
+            "friendly_double_in_center": weights["friendly_double_in_center"] - friendly_double_in_center_delta,
+            "enemy_single_in_edges": weights["enemy_single_in_edges"] - enemy_single_in_edges_delta,
+            "enemy_double_in_edges": weights["enemy_double_in_edges"] - enemy_double_in_edges_delta,
+            "enemy_single_in_center": weights["enemy_single_in_center"] - enemy_single_in_center_delta,
+            "enemy_double_in_center": weights["enemy_double_in_center"] - enemy_double_in_center_delta,
+
+            "friendly_double_in_back_corner": weights["friendly_double_in_back_corner"] - friendly_double_in_back_corner_delta,
+            "friendly_doubles_in_line": weights["friendly_doubles_in_line"] - friendly_doubles_in_line_delta,
+            "friendly_single_double_in_line": weights["friendly_single_double_in_line"] - friendly_single_double_in_line_delta,
+            "friendly_singles_in_line": weights["friendly_singles_in_line"] - friendly_singles_in_line_delta,
+            "friendly_piece_is_last": weights["friendly_piece_is_last"] - friendly_piece_is_last_delta,
+
+            "friendly_density": weights["friendly_density"] - friendly_density_delta,
+            "friendly_mobility": weights["friendly_mobility"] - friendly_mobility_delta,
+            "enemy_density": weights["enemy_density"] - enemy_density_delta,
+            "enemy_mobility": weights["enemy_mobility"] - enemy_mobility_delta,
+
+            "friendly_single_under_attack": weights["friendly_single_under_attack"] - friendly_single_under_attack_delta,
+            "friendly_double_under_attack": weights["friendly_double_under_attack"] - friendly_double_under_attack_delta
+        }
+        #print(f"Red weights: {red_weight}")
+        #print(f"Blue weights: {blue_weight}")
+        i = 0
+        board = Board()
+        board.fen_notation_into_bb("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
+        print(f"Starting game {j+1}:")
         while True:
             # Determine which player's turn
             if i % 2 == 0:
-                turn = blue_player
+                turn = EvolvedAIPlayer("Red", board, 12000, 1, red_weight)
             else:
-                turn = red_player
-
-            # Print the current game state
-            board.print_board()
-            print("-----------------------")
-            print(f"Blue score: {blue_player.get_score(board)}")
-            print(f"Red score: {red_player.get_score(board)}")
-
-            # Check if the game is over
-            game_over = board.is_game_over()
-            if game_over[0]:
-                print(f"game over, {game_over[1]} wins")
-                break
-
-            print("-----------------------")
-            print(f"Its {turn.color}'s turn.")
-
-            # Get next move from the current player
-            if turn == blue_player:
-                # next_move = board.ask_for_move()
-                next_move = turn.get_best_move(2, False, False)
-                last_3_moves.append(next_move)
-
-                if last_3_moves.count(next_move) > 1 and len(last_3_moves) == 3:
-                    next_move = turn.get_random_move()
-            else:
-                next_move = turn.get_random_move()
-
+                turn = EvolvedAIPlayer("Blue", board, 12000, 1, blue_weight)
+            #print("-----------------------")
+            #print(f"Its {turn.color}'s turn.")
+            #board.print_board()
+            best_move = turn.get_best_move_through_time()
             # move = next_move # this can't work, as we need move to be from Move class, not just a string
             # convert next_move (string) to Move object first
-            from_square, to_square = next_move.upper().split('-')
+            # now we can create Move object
+            from_square, to_square = best_move.upper().split('-')
             from_coordinate = Coordinate[from_square]
             to_coordinate = Coordinate[to_square]
-            # now we can create Move object
             move = Move(player=turn.color, fromm=from_coordinate, to=to_coordinate)
+            board.apply_move(move)
+            #print("-----------------------")
+            #print(best_move)
+            if board.is_game_over()[0]==True:
+                print("-----------------------")
+                print(f"{turn.color} won!")
+                weights = {
+                    "bias": weights["bias"],
+                    "friendly_singles_value": weights["friendly_singles_value"] + (turn.weights["friendly_singles_value"]-weights["friendly_singles_value"]) * 0.002 ,
+                    "friendly_doubles_value": weights["friendly_doubles_value"] + (turn.weights["friendly_doubles_value"]-weights["friendly_doubles_value"]) * 0.002,
+                    "friendly_material_score": weights["friendly_material_score"] + (turn.weights["friendly_material_score"]-weights["friendly_material_score"]) * 0.002,
+                    "enemy_singles_value": weights["enemy_singles_value"] + (turn.weights["enemy_singles_value"]-weights["enemy_singles_value"]) * 0.002,
+                    "enemy_doubles_value": weights["enemy_doubles_value"] + (turn.weights["enemy_doubles_value"]-weights["enemy_doubles_value"]) * 0.002,
+                    "enemy_material_score": weights["enemy_material_score"] + (turn.weights["enemy_material_score"]-weights["enemy_material_score"]) * 0.002,
 
-            # Apply move
-            response = board.apply_move(move)
-            print("-----------------------")
-            print(next_move)
-            print(response)
-            print("-----------------------")
-            if response.startswith('Error'):
+                    "friendly_most_advanced_singles": weights["friendly_most_advanced_singles"] + (turn.weights["friendly_most_advanced_singles"]-weights["friendly_most_advanced_singles"]) * 0.002,
+                    "friendly_most_advanced_doubles": weights["friendly_most_advanced_doubles"] + (turn.weights["friendly_most_advanced_doubles"]-weights["friendly_most_advanced_doubles"]) * 0.002,
+                    "enemy_most_advanced_singles": weights["enemy_most_advanced_singles"] + (turn.weights["enemy_most_advanced_singles"]-weights["enemy_most_advanced_singles"]) * 0.002,
+                    "enemy_most_advanced_doubles": weights["enemy_most_advanced_doubles"] + (turn.weights["enemy_most_advanced_doubles"]-weights["enemy_most_advanced_doubles"]) * 0.002,
+                    "friendly_advancement_of_singles": weights["friendly_advancement_of_singles"] + (turn.weights["friendly_advancement_of_singles"]-weights["friendly_advancement_of_singles"]) * 0.002,
+                    "friendly_advancement_of_doubles": weights["friendly_advancement_of_doubles"] + (turn.weights["friendly_advancement_of_doubles"]-weights["friendly_advancement_of_doubles"]) * 0.002,
+                    "enemy_advancement_of_singles": weights["enemy_advancement_of_singles"] + (turn.weights["enemy_advancement_of_singles"]-weights["enemy_advancement_of_singles"]) * 0.002,
+                    "enemy_advancement_of_doubles": weights["enemy_advancement_of_doubles"] + (turn.weights["enemy_advancement_of_doubles"]-weights["enemy_advancement_of_doubles"]) * 0.002,
+
+                    "control_of_center": weights["control_of_center"] + (turn.weights["control_of_center"]-weights["control_of_center"]) * 0.002,
+                    "control_of_edges": weights["control_of_edges"] + (turn.weights["control_of_edges"]-weights["control_of_edges"]) * 0.002,
+
+                    "friendly_single_in_edges": weights["friendly_single_in_edges"] + (turn.weights["friendly_single_in_edges"]-weights["friendly_single_in_edges"]) * 0.002,
+                    "friendly_double_in_edges": weights["friendly_double_in_edges"] + (turn.weights["friendly_double_in_edges"]-weights["friendly_double_in_edges"]) * 0.002,
+                    "friendly_single_in_center": weights["friendly_single_in_center"] + (turn.weights["friendly_single_in_center"]-weights["friendly_single_in_center"]) * 0.002,
+                    "friendly_double_in_center": weights["friendly_double_in_center"] + (turn.weights["friendly_double_in_center"]-weights["friendly_double_in_center"]) * 0.002,
+                    "enemy_single_in_edges": weights["enemy_single_in_edges"] + (turn.weights["enemy_single_in_edges"]-weights["enemy_single_in_edges"]) * 0.002,
+                    "enemy_double_in_edges": weights["enemy_double_in_edges"] + (turn.weights["enemy_double_in_edges"]-weights["enemy_double_in_edges"]) * 0.002,
+                    "enemy_single_in_center": weights["enemy_single_in_center"] + (turn.weights["enemy_single_in_center"]-weights["enemy_single_in_center"]) * 0.002,
+                    "enemy_double_in_center": weights["enemy_double_in_center"] + (turn.weights["enemy_double_in_center"]-weights["enemy_double_in_center"]) * 0.002,
+
+                    "friendly_double_in_back_corner": weights["friendly_double_in_back_corner"] + (turn.weights["friendly_double_in_back_corner"]-weights["friendly_double_in_back_corner"]) * 0.002,
+                    "friendly_doubles_in_line": weights["friendly_doubles_in_line"] + (turn.weights["friendly_doubles_in_line"]-weights["friendly_doubles_in_line"]) * 0.002,
+                    "friendly_single_double_in_line": weights["friendly_single_double_in_line"] + (turn.weights["friendly_single_double_in_line"]-weights["friendly_single_double_in_line"]) * 0.002,
+                    "friendly_singles_in_line": weights["friendly_singles_in_line"] + (turn.weights["friendly_singles_in_line"]-weights["friendly_singles_in_line"]) * 0.002,
+                    "friendly_piece_is_last": weights["friendly_piece_is_last"] + (turn.weights["friendly_piece_is_last"]-weights["friendly_piece_is_last"]) * 0.002,
+
+                    "friendly_density": weights["friendly_density"] + (turn.weights["friendly_density"]-weights["friendly_density"]) * 0.002,
+                    "friendly_mobility": weights["friendly_mobility"] + (turn.weights["friendly_mobility"]-weights["friendly_mobility"]) * 0.002,
+                    "enemy_density": weights["enemy_density"] + (turn.weights["enemy_density"]-weights["enemy_density"]) * 0.002,
+                    "enemy_mobility": weights["enemy_mobility"] + (turn.weights["enemy_mobility"]-weights["enemy_mobility"]) * 0.002,
+
+                    "friendly_single_under_attack": weights["friendly_single_under_attack"] + (turn.weights["friendly_single_under_attack"]-weights["friendly_single_under_attack"]) * 0.002,
+                    "friendly_double_under_attack": weights["friendly_double_under_attack"] + (turn.weights["friendly_double_under_attack"]-weights["friendly_double_under_attack"]) * 0.002
+                }
+                print("--------------------------------------------------------------------")
+                print(weights)
                 break
 
-            # Increment turn
-            i += 1
-
-        print(f"------- Züge: {i / 2 + 0.5} -------")
-        total += i
-        i = 0
-        winner += 1 if "Blue" in board.is_game_over()[1] else 0
-
-        board.reset()
-
-    # Print results
-    print(f"N: {N}")
-    print(f"media: {total / N}")
-    print(f"winner: {winner}")
-    print("Transposition Table Blue Player: ", blue_player.transposition_table.print_table() )
-
+            i = i+1
+        
 
 if __name__ == "__main__":
     main()

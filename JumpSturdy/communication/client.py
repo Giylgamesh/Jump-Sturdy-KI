@@ -1,6 +1,7 @@
 import json
 import pygame
 from JumpSturdy.ai.player import AIPlayer
+from JumpSturdy.ai.evolved_player import EvolvedAIPlayer
 from JumpSturdy.communication.network import Network
 from JumpSturdy.game_state. board import Board
 pygame.font.init()
@@ -47,7 +48,7 @@ def main():
                 board = Board()
                 board.fen_notation_into_bb(game["board"].split(" ")[0])
                 board.print_board()
-                ai_player = AIPlayer("Red", board,game["time"],turn)
+                ai_player = EvolvedAIPlayer("Red", board,game["time"],turn,{'bias': 1, 'friendly_singles_value': 2.603969578025859, 'friendly_doubles_value': 6.908252986319241, 'friendly_material_score': 4.702191422351861, 'enemy_singles_value': -3.1059742454880244, 'enemy_doubles_value': -6.585053920054966, 'enemy_material_score': -5.082586464587797, 'friendly_most_advanced_singles': 2.3484089893411957, 'friendly_most_advanced_doubles': 4.482095480436495, 'enemy_most_advanced_singles': -4.777521338886239, 'enemy_most_advanced_doubles': -4.996821432361024, 'friendly_advancement_of_singles': 11.052931969951985, 'friendly_advancement_of_doubles': 10.891678701974092, 'enemy_advancement_of_singles': -4.9318960997701815, 'enemy_advancement_of_doubles': -4.282210719449231, 'control_of_center': 4.853225089997874, 'control_of_edges': 4.650310616293443, 'friendly_single_in_edges': 7.27697313330563, 'friendly_double_in_edges': 2.2731793113021226, 'friendly_single_in_center': 4.714144976664993, 'friendly_double_in_center': 4.471746226955499, 'enemy_single_in_edges': -6.919771876182096, 'enemy_double_in_edges': -2.941061641863923, 'enemy_single_in_center': -4.737131426074215, 'enemy_double_in_center': -2.6570364902218095, 'friendly_double_in_back_corner': -2.5817459843888235, 'friendly_doubles_in_line': 8.87453553004497, 'friendly_single_double_in_line': 10.952258050678351, 'friendly_singles_in_line': 2.960689407641968, 'friendly_piece_is_last': 42.20845388132646, 'friendly_density': 6.764715009938298, 'friendly_mobility': 3.1355488727116247, 'enemy_density': -2.72067263609914, 'enemy_mobility': -6.737861201410557, 'friendly_single_under_attack': -9.288535612156842, 'friendly_double_under_attack': -9.18440755878567}  )
                 #change to any input you like. This one is just console input. Change it here to respond with your Ai's answer.
                 #Answer must have format: start-end like E7-F7
                 i = ai_player.get_best_move_through_time()
