@@ -120,6 +120,7 @@ class Board:
     FORBIDDEN_RIGHT_MASK = 0b1000000010000000100000001000000010000000100000001000000010000000
     FORBIDDEN_LEFT_LEFT_MASK = 0b0000001100000011000000110000001100000011000000110000001100000011
     FORBIDDEN_RIGHT_RIGHT_MASK = 0b1100000011000000110000001100000011000000110000001100000011000000
+    lastMove = ""
 
     move_categories_dict = {
         # singles
@@ -387,6 +388,8 @@ class Board:
                   Coordinate.A1.value <= move.to.value <= Coordinate.H8.value):
             return "Error: Invalid coordinates"
 
+        lastMove = str(move)[-5:]
+        
         # Apply the move
         # Blue piece
         if move.player == "Blue":
