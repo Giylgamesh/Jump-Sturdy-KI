@@ -578,33 +578,33 @@ class AIPlayer:
         best_value = float('-inf') if self.color == "Blue" else float('inf')
         count = 1
         prev_count = count
-        #print(f"Tiefe: 0 und Anzahl Zustände: 1")
-        start_time = time.time()
+        print(f"Tiefe: 0 und Anzahl Zustände: 1")
+        start = time.time()
         for depth in range(1, max_depth + 1):
             board_copy = self.board.copy_board()
-         #   startzeit = time.time()
+            startzeit = time.time()
             try:
                 value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, start_time,limit_time)
                 count = countPerDepth
                 prev_count = count
             except TimeoutError:
                 break
-          #  print(move)
-          #  print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
+            print(move)
+            print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
             
-          #  print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
+            print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
             if isBlue:
                 if value > best_value:
                     best_value, best_move = value, move
             else:
                 if value < best_value:
                     best_value, best_move = value, move
-         #   print(best_move)
+            print(best_move)
             if cutoff == True:
                 if value == float('inf'):
                     return str(move)[-5:]
-      #  print(f"Anzahl durchlaufener Zustände: {count}")
-        #print("Gesamtlaufzeit: " + str((time.time() - start) * 1000) + "ms")
+        print(f"Anzahl durchlaufener Zustände: {count}")
+        print("Gesamtlaufzeit: " + str((time.time() - start) * 1000) + "ms")
         best_move = str(best_move)[-5:]
         return best_move
 
