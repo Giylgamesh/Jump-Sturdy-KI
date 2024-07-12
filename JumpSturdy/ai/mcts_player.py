@@ -1,7 +1,7 @@
 import random
 import math
 import time
-from collections import deque
+from JumpSturdy.ai.evolved_player import EvolvedAIPlayer
 from JumpSturdy.game_state.board import Board, Coordinate, Move
 
 def reverse_move_string(move):
@@ -10,80 +10,32 @@ def reverse_move_string(move):
     return reversed_move
 
 class MCTSNode:
-    def __init__(self, color, board: Board, parent=None):
-        self.board = board
+    def __init__(self, move:Move, parent):
+        self.move = move
         self.parent = parent
-        self.children = []
+        self.children = {}
         self.wins = 0
         self.visits = 0
-        self.color = color
 
-    def is_fully_expanded(self):
-        return len(self.children) == len(list(self.board.get_legal_moves_list(self.board.get_all_legal_moves(self.color))))
+    def add_children(self, children:dict) -> None:
+        for child in children:
+            self.children[child.move] = child
 
-    def best_child(self, exploration_weight=1.41):
-        choices_weights = [
-            (child.wins / child.visits) + exploration_weight * math.sqrt((2 * math.log(self.visits) / child.visits))
-            for child in self.children
-        ]
-        return self.children[choices_weights.index(max(choices_weights))]
+    def value(self, explore: float = math.sqrt(2)):
+        if self.visits == 0:
+            return 0 if explore == 0 else float('inf')
+        else:
+            return self.wins/self.visits + explore + math.sqrt(math.log(self.parent.visits)/self.visits)
 
-    def expand(self):
-        if self.is_fully_expanded():
-            return None
-        legal_moves = self.board.get_legal_moves_list(self.board.get_all_legal_moves(self.color))
-        for move in legal_moves:
-            if not any(child.board == self.board for child in self.children):
-                new_board = self.board.copy_board()
-                from_square, to_square = move.upper().split('-')
-                from_coordinate = Coordinate[from_square]
-                to_coordinate = Coordinate[to_square]
-                move_class = Move(self.color, fromm=from_coordinate, to=to_coordinate)
-                new_board.apply_move(move_class)
-                new_node = MCTSNode(new_board, parent=self)
-                self.children.append(new_node)
-                return new_node
-
-    def backpropagate(self, result):
-        self.visits += 1
-        self.wins += result
-        if self.parent:
-            self.parent.backpropagate(result)
-
-class MCTSPlayer:
-    """Our Monte Carlo Tree Search Player class. It includes all the actions the AI Player 
+class Player:
+    """Our Monte Carlo Tree Search Player class. It includes all the actions the MCTS 
     needs to play the game.
     """
     def __init__(self, color, board:Board, time, turn):
-        # Initialize AI components
         self.color = color
         self.board = board
         self.time = time
         self.turn = turn
-
-    def simulate(self):
-        last_position = ""
-        copy_board = self.board.copy_board()
-        color = self.color
-        while not copy_board.is_game_over()[0]:
-            random_move = random.choice(copy_board.get_legal_moves_list(copy_board.get_all_legal_moves(color)))
-            if random_move != last_position:
-                from_square, to_square = random_move.upper().split('-')
-                from_coordinate = Coordinate[from_square]
-                to_coordinate = Coordinate[to_square]
-                move = Move(color, fromm=from_coordinate, to=to_coordinate)
-                copy_board.apply_move(move)
-                last_position = reverse_move_string(random_move)
-                if color == "Blue":
-                    color = "Red"
-                else:
-                    color = "Blue"
-                copy_board.print_board()
-        if copy_board.is_game_over()[1] == self.color:
-            return 1
-        else:
-            return 0
-
 
     def get_random_move(self):
         """
@@ -105,23 +57,115 @@ class MCTSPlayer:
         random_index = random.randrange(0, len(posible_moves), 1)
         move = posible_moves[random_index]
         return move
+
+class MCTS:
+    def __init__(self, player:Player):
+        self.player = player
+        self.copy_board = player.board.copy_board()
+        self.root = MCTSNode(None, None)
+        self.run_time = 0
+        self.node_count = 0
+        self.num_rollouts = 0
+
+
+    def select_node(self) -> tuple:
+        node = self.root
+        board = self.copy_board.copy_board()
+
+        while len(node.children) != 0:
+            children = node.children.values()
+            max_value = max(children, key=lambda n: n.value()).value()
+
+            max_nodes = [n for n in children if n.value() == max_value]
+
+            node = random.choice(max_nodes)
+            board.apply_move(node.move)
+
+            if node.visits == 0:
+                return node, board
+
+        if self.expand(node, board):
+            node = random.choice(list(node.children.values()))
+            board.apply_move(node.move)
+
+        return node, board
     
-    def mcts(self, simulations=1000):
-        root = MCTSNode(self.color, self.board)
-        for _ in range(simulations):
-            node = root
-            # Selection
-            while node.is_fully_expanded() and node.children:
-                node = node.best_child()
-            # Expansion
-            new_node = node.expand()
-            if new_node is None:
-                new_node = node
-            # Simulation
-            result = self.simulate()
-            # Backpropagation
-            new_node.backpropagate(result)
-        return root.best_child(exploration_weight=0).board.lastMove
+    def expand(self, parent: MCTSNode, board: Board) -> bool:
+        if board.is_game_over()[0]:
+            return False
+        children = []
+        for move in board.get_legal_moves_list(board.get_all_legal_moves(self.player.color)):
+            from_square, to_square = move.split('-')
+            from_coordinate = Coordinate[from_square]
+            to_coordinate = Coordinate[to_square]
+            converted_move = Move(self.player.color, fromm=from_coordinate, to=to_coordinate)
+            child_node = MCTSNode(converted_move, parent)
+            children.append(child_node)
+        parent.add_children(children)
+
+        return True
+
+    def roll_out(self, board: Board) -> int:
+        while not board.is_game_over()[0]:
+            move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves(self.player.color)))
+            from_square, to_square = move.upper().split('-')
+            from_coordinate = Coordinate[from_square]
+            to_coordinate = Coordinate[to_square]
+            converted_move =  Move(self.player.color, fromm=from_coordinate, to=to_coordinate)
+            board.apply_move(converted_move)
+
+        return board.is_game_over()[1]
+
+    def back_propagate(self, node: MCTSNode, turn: str, outcome: int) -> None:
+        if turn == "Blue":
+            turn_int = 2
+        else:
+            turn_int = 1
+
+        
+        reward = 0 if outcome == turn_int else 1
+
+        while node is not None:
+            node.visits += 1
+            node.wins += reward
+            node = node.parent
+            reward = 1 - reward
+
+    def search(self, time_limit: int):
+        start_time = time.process_time()
+
+        num_rollouts = 0
+        while time.process_time() - start_time < time_limit:
+            node, board = self.select_node()
+            outcome = self.roll_out(board)
+            self.back_propagate(node, self.player.color, outcome)
+            num_rollouts += 1 
+
+        run_time = time.process_time() - start_time
+        self.run_time = run_time
+        self.num_rollouts = num_rollouts
+
+    def best_move(self):
+        if self.copy_board.is_game_over()[0]:
+            return -1
+
+        max_value = max(self.root.children.values(), key=lambda n: n.visits).visits
+        max_nodes = [n for n in self.root.children.values() if n.visits == max_value]
+        best_child = random.choice(max_nodes)
+
+        return best_child.move
+
+    def move(self, move):
+        if move in self.root.children:
+            self.copy_board.apply_move(move)
+            self.root = self.root.children[move]
+            return
+
+        self.copy_board.apply_move(move)
+        self.root = MCTSNode(None, None)
+
+    def statistics(self) -> tuple:
+        return self.num_rollouts, self.run_time
 
 def main():
     """
@@ -131,9 +175,45 @@ def main():
     """
     board = Board()
     board.initialize()
-    aiplayer = MCTSPlayer("Blue",board,12000,0)
-    print(aiplayer.simulate())
-    print(aiplayer.mcts(1000))
+    player = Player("Blue", board, 120000,0)
+    mcts = MCTS(player)
+    evolvedAIPlayer = EvolvedAIPlayer("Red",board,120000,0,{'bias': 1, 'friendly_singles_value': 0.7341041163830963, 'friendly_doubles_value': 2.274233660960818, 'friendly_material_score': 1.5026103652388332, 'enemy_singles_value': -0.7291608705251027, 'enemy_doubles_value': -2.265430977891856, 'enemy_material_score': -1.5074077330290985, 'friendly_most_advanced_singles': 0.748247621491522, 'friendly_most_advanced_doubles': 1.515407356131302, 'enemy_most_advanced_singles': -1.510285668824605, 'enemy_most_advanced_doubles': -1.50961031645031, 'friendly_advancement_of_singles': 3.7785644200333097, 'friendly_advancement_of_doubles': 3.728760057392521, 'enemy_advancement_of_singles': -1.4892627538963819, 'enemy_advancement_of_doubles': -1.5077596634911712, 'control_of_center': 1.488164124061923, 'control_of_edges': 1.4856870496218675, 'friendly_single_in_edges': 2.2544290664740716, 'friendly_double_in_edges': 0.7380353065066093, 'friendly_single_in_center': 1.504606566797584, 'friendly_double_in_center': 1.506622449400612, 'enemy_single_in_edges': -2.2586791963463746, 'enemy_double_in_edges': -0.7524670320911624, 'enemy_single_in_center': -1.49559265658973, 'enemy_double_in_center': -0.7445612570569379, 'friendly_double_in_back_corner': -0.7563267575338303, 'friendly_doubles_in_line': 2.9624074414727244, 'friendly_single_double_in_line': 3.7508566377756627, 'friendly_singles_in_line': 0.7524614046343802, 'friendly_piece_is_last': 14.910873615920098, 'friendly_density': 2.2578436465288503, 'friendly_mobility': 0.7504994504492232, 'enemy_density': -0.7497067955526692, 'enemy_mobility': -2.2321338830066946, 'friendly_single_under_attack': -2.9762775175952796, 'friendly_double_under_attack': -2.9890296486546855})
+
+    while not board.is_game_over()[0]:
+        print("Current board:")
+        board.print_board()
+
+        evolved_move = evolvedAIPlayer.get_best_move_through_time()
+
+        from_square, to_square = evolved_move.upper().split('-')
+        from_coordinate = Coordinate[from_square]
+        to_coordinate = Coordinate[to_square]
+        move = Move(evolvedAIPlayer.color, fromm=from_coordinate, to=to_coordinate)
+        board.apply_move(move)
+        mcts.move(move)
+
+        board.print_board()
+
+        if board.is_game_over()[1]=="Red":
+            print("Red Player won!")
+            break
+
+        print("Thinking...")
+
+        mcts.search(5)
+        num_rollouts, run_time = mcts.statistics()
+        print("Statistics: ", num_rollouts, "rollouts in", run_time, "seconds")
+        move = mcts.best_move()
+
+        print("MCTS chose move: ", move)
+
+        board.apply_move(move)
+        mcts.move(move)
+
+        if board.is_game_over()[1]=="Blue":
+            print("Blue won!")
+            break
+
 
 if __name__ == "__main__":
     main()
