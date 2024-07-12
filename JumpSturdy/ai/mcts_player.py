@@ -161,8 +161,8 @@ class MCTS:
         amount_simulation = 0
         while time.time() - start_time < time_limit:
             node, board = self.select()
-            outcome = self.simulate(board)
-            self.back_propagate(node, self.player.color, outcome)
+            winner = self.simulate(board)
+            self.back_propagate(node, self.player.color, winner)
             amount_simulation += 1 
 
         run_time = time.time() - start_time
@@ -191,9 +191,6 @@ class MCTS:
 
         self.copy_board.apply_move(move)
         self.root = MCTSNode(None, None)
-
-    def statistics(self) -> tuple:
-        return self.amount_simulation, self.run_time
 
 def main():
     """
@@ -229,7 +226,8 @@ def main():
         print("Thinking...")
 
         mcts.search(5)
-        amount_simulation, run_time = mcts.statistics()
+        amount_simulation = mcts.amount_simulation
+        run_time = mcts.run_time
         print("Statistics: ", amount_simulation, "rollouts in", run_time, "seconds")
         move = mcts.best_move()
 
