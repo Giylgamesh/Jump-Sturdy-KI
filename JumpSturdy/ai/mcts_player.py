@@ -10,17 +10,28 @@ def reverse_move_string(move):
     return reversed_move
 
 class MCTSNode:
+    """
+    Initialization of the move of this node, the parent node, the children of this node, 
+    number of simulations won and number of simulations under this node
+    """
     def __init__(self, move:Move, parent):
         self.move = move
         self.parent = parent
         self.children = {}
         self.wins = 0
         self.visits = 0
-
+    
+    """
+    Add the children in this node. 
+    Generates children nodes based on the available train options.
+    """
     def add_children(self, children:dict) -> None:
         for child in children:
             self.children[child.move] = child
 
+    """
+    Indicates the value of the node based on the Upper Confidence bound (UCT). 
+    """
     def value(self, explore: float = math.sqrt(2)):
         if self.visits == 0:
             return 0 if explore == 0 else float('inf')
@@ -65,18 +76,26 @@ class MCTS:
         self.root = MCTSNode(None, None)
         self.run_time = 0
         self.node_count = 0
-        self.num_rollouts = 0
+        self.amount_simulation = 0
 
 
-    def select_node(self) -> tuple:
+    def select(self) -> tuple:
         node = self.root
         board = self.copy_board.copy_board()
 
         while len(node.children) != 0:
             children = node.children.values()
-            max_value = max(children, key=lambda n: n.value()).value()
+            max_value = float('-inf')
+            for child in children:
+                value = child.value()
 
-            max_nodes = [n for n in children if n.value() == max_value]
+                if value > max_value:
+                    max_value = value
+
+            max_nodes = []
+            for child in children:
+                if child.value() == max_value:
+                    max_nodes.append(child)
 
             node = random.choice(max_nodes)
             board.apply_move(node.move)
@@ -84,13 +103,12 @@ class MCTS:
             if node.visits == 0:
                 return node, board
 
-        if self.expand(node, board):
+        if self.generate(node, board):
             node = random.choice(list(node.children.values()))
             board.apply_move(node.move)
-
         return node, board
     
-    def expand(self, parent: MCTSNode, board: Board) -> bool:
+    def generate(self, parent: MCTSNode, board: Board) -> bool:
         if board.is_game_over()[0]:
             return False
         children = []
@@ -102,29 +120,35 @@ class MCTS:
             child_node = MCTSNode(converted_move, parent)
             children.append(child_node)
         parent.add_children(children)
-
         return True
 
-    def roll_out(self, board: Board) -> int:
+    def simulate(self, board: Board) -> int:
+        turn = 0
         while not board.is_game_over()[0]:
-            move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves(self.player.color)))
-            from_square, to_square = move.upper().split('-')
-            from_coordinate = Coordinate[from_square]
-            to_coordinate = Coordinate[to_square]
-            converted_move =  Move(self.player.color, fromm=from_coordinate, to=to_coordinate)
-            board.apply_move(converted_move)
-
+            if turn%2==0:
+                if self.player.color == "Blue":
+                    move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves("Blue")))
+                else:
+                    move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves("Red")))
+                from_square, to_square = move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+                converted_move =  Move(self.player.color, fromm=from_coordinate, to=to_coordinate)
+                board.apply_move(converted_move)
+            else:
+                if self.player.color == "Red":
+                    move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves("Red")))
+                else:
+                    move = random.choice(board.get_legal_moves_list(board.get_all_legal_moves("Blue")))
+                from_square, to_square = move.upper().split('-')
+                from_coordinate = Coordinate[from_square]
+                to_coordinate = Coordinate[to_square]
+                converted_move =  Move(self.player.color, fromm=from_coordinate, to=to_coordinate)
+                board.apply_move(converted_move)
         return board.is_game_over()[1]
 
-    def back_propagate(self, node: MCTSNode, turn: str, outcome: int) -> None:
-        if turn == "Blue":
-            turn_int = 2
-        else:
-            turn_int = 1
-
-        
-        reward = 0 if outcome == turn_int else 1
-
+    def back_propagate(self, node: MCTSNode, color: str, winner: str) -> None:
+        reward = 1 if winner == color else 0
         while node is not None:
             node.visits += 1
             node.wins += reward
@@ -132,28 +156,32 @@ class MCTS:
             reward = 1 - reward
 
     def search(self, time_limit: int):
-        start_time = time.process_time()
+        start_time = time.time()
 
-        num_rollouts = 0
-        while time.process_time() - start_time < time_limit:
-            node, board = self.select_node()
-            outcome = self.roll_out(board)
+        amount_simulation = 0
+        while time.time() - start_time < time_limit:
+            node, board = self.select()
+            outcome = self.simulate(board)
             self.back_propagate(node, self.player.color, outcome)
-            num_rollouts += 1 
+            amount_simulation += 1 
 
-        run_time = time.process_time() - start_time
+        run_time = time.time() - start_time
         self.run_time = run_time
-        self.num_rollouts = num_rollouts
+        self.amount_simulation = amount_simulation
 
     def best_move(self):
         if self.copy_board.is_game_over()[0]:
             return -1
 
-        max_value = max(self.root.children.values(), key=lambda n: n.visits).visits
-        max_nodes = [n for n in self.root.children.values() if n.visits == max_value]
-        best_child = random.choice(max_nodes)
-
-        return best_child.move
+        max_visits = float('-inf')
+        for child in self.root.children.values():
+            if child.visits > max_visits:
+                max_visits = child.visits
+        max_nodes = []
+        for child in self.root.children.values():
+            if child.visits == max_visits:
+                max_nodes.append(child)
+        return random.choice(max_nodes).move
 
     def move(self, move):
         if move in self.root.children:
@@ -165,7 +193,7 @@ class MCTS:
         self.root = MCTSNode(None, None)
 
     def statistics(self) -> tuple:
-        return self.num_rollouts, self.run_time
+        return self.amount_simulation, self.run_time
 
 def main():
     """
@@ -201,8 +229,8 @@ def main():
         print("Thinking...")
 
         mcts.search(5)
-        num_rollouts, run_time = mcts.statistics()
-        print("Statistics: ", num_rollouts, "rollouts in", run_time, "seconds")
+        amount_simulation, run_time = mcts.statistics()
+        print("Statistics: ", amount_simulation, "rollouts in", run_time, "seconds")
         move = mcts.best_move()
 
         print("MCTS chose move: ", move)
