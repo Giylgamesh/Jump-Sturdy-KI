@@ -584,15 +584,15 @@ class AIPlayer:
             board_copy = self.board.copy_board()
             startzeit = time.time()
             try:
-                value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, start_time,limit_time)
+                value, move, countPerDepth = self.alpha_beta(board_copy, depth, float('-inf'), float('inf'), isBlue, display, cutoff, count, start,limit_time)
+                print(move)
+                print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
                 count = countPerDepth
+                print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
                 prev_count = count
             except TimeoutError:
                 break
-            print(move)
-            print(f"Benötigte Zeit für die Tiefe {depth} " + str((time.time() - startzeit) * 1000) + "ms")
-            
-            print(f"Tiefe: {depth} und Anzahl Zustände: {count - prev_count}")
+
             if isBlue:
                 if value > best_value:
                     best_value, best_move = value, move

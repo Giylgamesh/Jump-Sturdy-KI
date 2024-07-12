@@ -158,8 +158,18 @@ def text_alpha_beta(fen):
     fen = fen
     board.fen_notation_into_bb(fen)
     board.print_board()
-    blue_player = AIPlayer("Blue", board)
-    best_move = blue_player.get_best_move(4, False, True, zobrist_table)
+    blue_player = AIPlayer("Blue", board, 12000,0)
+    best_move = blue_player.get_best_move(4, False, True, 20000)
+    print(best_move)
+
+
+def text_tt_time(fen):
+    board = Board()
+    fen = fen
+    board.fen_notation_into_bb(fen)
+    board.print_board()
+    blue_player = AIPlayer("Blue", board, 12000, 0)
+    best_move = blue_player.get_best_move_through_time()
     print(best_move)
 
 def test_problemstellung(fen,redFirst:int):
@@ -324,6 +334,9 @@ class TestAI(unittest.TestCase):
 
     def test_alpha_beta_fen_3(self):
         text_alpha_beta("2b02bb/1bb2b03/5bb2/8/1r03r02/6r01/8/r01r01rrr0")
+
+    def test_tt_fen_1(self):
+        text_tt_time("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0")
 
     def test_compare_minMax_alphaBeta_1(self):
         print("Start ----Compare minMax alpha Beta 1")
